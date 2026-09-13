@@ -24,14 +24,6 @@ class StoreOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-             // TEMPORARY.
-            // Authentication will replace this later.
-            'user_id' => [
-                'required',
-                'integer',
-                'exists:users,id',
-            ],
-
             'restaurant_id' => [
                 'required',
                 'integer',

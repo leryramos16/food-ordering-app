@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreOrderRequest;
 use App\Http\Resources\OrderResource;
-use App\Models\User;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,16 +18,7 @@ class OrderController extends Controller
 
         $validated = $request->validated();
 
-        /*
-         * TEMPORARY.
-         *
-         * After we implement Sanctum:
-         *
-         * $user = $request->user();
-         */
-        $user = User::findOrFail(
-            $validated['user_id']
-        );
+        $user = $request->user();
 
         $order = $orderService->place(
             $user,

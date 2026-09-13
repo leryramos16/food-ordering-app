@@ -18,7 +18,7 @@ class OrderService
     {
         if(!$user->is_active) {
             throw ValidationException::withMessages([
-                'user_id' => [
+                'account' => [
                     'This user account is not active'
                 ],
             ]);
@@ -117,7 +117,7 @@ class OrderService
 
                 $lineTotalCents = $unitPriceCents * $quantity;
 
-                $subTotalCents += $lineTotalCents;
+                $subtotalCents += $lineTotalCents;
 
                 $orderLines[] = [
                     'menu_item_id' => $menuItem->id,
@@ -131,7 +131,7 @@ class OrderService
                 // Check restaurant minimum order
                 $minimumOrderCents =  $this->moneyToCents($restaurant->minimum_order);
 
-                if ($subTotalCents < $minimumOrderCents) {
+                if ($subtotalCents < $minimumOrderCents) {
                     throw ValidationException::withMessages([
                         'items' => [
                             'The order does not meet the restaurant minimum order amount.',

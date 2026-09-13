@@ -1,3 +1,50 @@
+# Food Ordering API + Mobile App
+
+This repository contains a Laravel 12 API and a small Flutter client in `mobile/`.
+Authentication uses Laravel Sanctum personal access tokens.
+
+## Authentication API
+
+| Method | Endpoint | Authentication |
+| --- | --- | --- |
+| POST | `/api/auth/register` | Public |
+| POST | `/api/auth/login` | Public |
+| GET | `/api/auth/me` | Bearer token |
+| POST | `/api/auth/logout` | Bearer token |
+| POST | `/api/orders` | Bearer token |
+
+Registration accepts `name`, `email`, optional `phone`, `password`, and
+`password_confirmation`. Login accepts `email` and `password`. Both successful
+responses include `data.user` and `data.token`.
+
+## Run locally
+
+```bash
+php artisan migrate
+php artisan serve --host=0.0.0.0
+```
+
+In another terminal:
+
+```bash
+cd mobile
+flutter pub get
+flutter run
+```
+
+The Android emulator uses `http://10.0.2.2:8000/api` by default. For a physical
+phone, supply the development computer's LAN IP:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://192.168.1.10:8000/api
+```
+
+Keep the phone and computer on the same network and allow port 8000 through the
+computer firewall. The app stores its token in secure storage and restores the
+session on startup.
+
+---
+
 <p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
 <p align="center">

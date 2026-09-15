@@ -21,6 +21,7 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
   late final ApiClient apiClient;
 
   late final AuthController authController;
+  late final RestaurantService restaurantService;
   late final RestaurantController restaurantController;
 
   @override
@@ -34,7 +35,8 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
     authController = AuthController(AuthService(apiClient, storage))
       ..restoreSession();
 
-    restaurantController = RestaurantController(RestaurantService(apiClient));
+    restaurantService = RestaurantService(apiClient);
+    restaurantController = RestaurantController(restaurantService);
   }
 
   @override
@@ -69,6 +71,7 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
               ? HomeScreen(
                   authController: authController,
                   restaurantController: restaurantController,
+                  restaurantService: restaurantService,
                 )
               : LoginScreen(authController: authController);
         },

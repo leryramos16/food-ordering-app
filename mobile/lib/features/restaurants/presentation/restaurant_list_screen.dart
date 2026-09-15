@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../data/restaurant_service.dart';
 import '../state/restaurant_controller.dart';
+import 'restaurant_detail_screen.dart';
 
 class RestaurantListScreen extends StatefulWidget {
-  const RestaurantListScreen({super.key, required this.controller});
+  const RestaurantListScreen({
+    super.key,
+    required this.controller,
+    required this.service,
+  });
 
   final RestaurantController controller;
+  final RestaurantService service;
 
   @override
   State<RestaurantListScreen> createState() => _RestaurantListScreenState();
@@ -67,10 +74,15 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
               return Card(
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
-                  onTap: () {
-                    // Next feature:
-                    // Open restaurant menu.
-                  },
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => RestaurantDetailScreen(
+                        restaurantId: restaurant.id,
+                        restaurantName: restaurant.name,
+                        service: widget.service,
+                      ),
+                    ),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Column(

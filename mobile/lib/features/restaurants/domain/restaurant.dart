@@ -1,3 +1,5 @@
+import 'category.dart';
+
 class Restaurant {
   const Restaurant({
     required this.id,
@@ -9,6 +11,7 @@ class Restaurant {
     required this.minimumOrder,
     required this.imageUrl,
     required this.isOpen,
+    this.categories = const [],
   });
 
   final int id;
@@ -20,8 +23,11 @@ class Restaurant {
   final double minimumOrder;
   final String? imageUrl;
   final bool isOpen;
+  final List<Category> categories;
 
   factory Restaurant.fromJson(Map<String, dynamic> json) {
+    final categories = json['categories'] as List<dynamic>? ?? [];
+
     return Restaurant(
       id: json['id'] as int,
       name: json['name'] as String,
@@ -32,6 +38,12 @@ class Restaurant {
       minimumOrder: double.parse(json['minimum_order'].toString()),
       imageUrl: json['image_url'] as String?,
       isOpen: json['is_open'] as bool,
+      categories: categories
+          .map(
+            (item) =>
+                Category.fromJson(Map<String, dynamic>.from(item as Map)),
+          )
+          .toList(),
     );
   }
 }

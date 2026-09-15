@@ -17,4 +17,12 @@ class RestaurantService {
         )
         .toList();
   }
+
+  Future<Restaurant> getMenu(int restaurantId) async {
+    final response = await _api.get('/restaurants/$restaurantId/menu');
+
+    final data = Map<String, dynamic>.from(response['data'] as Map);
+
+    return Restaurant.fromJson(data);
+  }
 }

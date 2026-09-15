@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../auth/state/auth_controller.dart';
+import '../../restaurants/data/restaurant_service.dart';
 import '../../restaurants/presentation/restaurant_list_screen.dart';
 import '../../restaurants/state/restaurant_controller.dart';
 
@@ -9,10 +10,12 @@ class HomeScreen extends StatelessWidget {
     super.key,
     required this.authController,
     required this.restaurantController,
+    required this.restaurantService,
   });
 
   final AuthController authController;
   final RestaurantController restaurantController;
+  final RestaurantService restaurantService;
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +31,10 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: RestaurantListScreen(controller: restaurantController),
+      body: RestaurantListScreen(
+        controller: restaurantController,
+        service: restaurantService,
+      ),
     );
   }
 }

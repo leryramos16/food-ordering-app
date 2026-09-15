@@ -24,7 +24,7 @@ class FoodOrderingSeeder extends Seeder
             ],
             [
                 'name' => 'Ler Restaurant',
-                'phone' => '09167965382',
+                'phone' => '09170000001',
                 'password' => Hash::make('leryjrdev16'),
                 'role' => 'restaurant_owner',
                 'is_active' => true,
@@ -37,7 +37,7 @@ class FoodOrderingSeeder extends Seeder
             ],
             [
                 'name' => 'Caius Matthew',
-                'phone' => '09509028833',
+                'phone' => '09170000002',
                 'password' => Hash::make('caius7'),
                 'role' => 'customer',
                 'is_active' => true,
@@ -51,7 +51,7 @@ class FoodOrderingSeeder extends Seeder
             ],
             [
                 'description' => 'Lomi and other Silog Meals, Available here!',
-                'phone' => '09167965382',
+                'phone' => '09170000001',
                 'address' => 'Mabini, Batangas',
                 'delivery_fee' => 50.00,
                 'minimum_order' => 100.00,

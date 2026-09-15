@@ -29,6 +29,7 @@ class AuthController extends ChangeNotifier {
     String email,
     String phone,
     String password,
+    String role,
   ) {
     return _run(
       () => _service.register(
@@ -36,6 +37,7 @@ class AuthController extends ChangeNotifier {
         email: email,
         phone: phone,
         password: password,
+        role: role,
       ),
     );
   }

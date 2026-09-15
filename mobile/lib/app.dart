@@ -8,6 +8,11 @@ import 'features/auth/data/auth_service.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/state/auth_controller.dart';
 import 'features/home/presentation/home_screen.dart';
+import 'features/owner/data/owner_menu_service.dart';
+import 'features/owner/data/owner_restaurant_service.dart';
+import 'features/owner/presentation/owner_home_screen.dart';
+import 'features/owner/state/owner_menu_controller.dart';
+import 'features/owner/state/owner_restaurant_controller.dart';
 import 'features/restaurants/data/restaurant_service.dart';
 import 'features/restaurants/state/restaurant_controller.dart';
 
@@ -26,6 +31,8 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
   late final RestaurantService restaurantService;
   late final RestaurantController restaurantController;
   late final AddressController addressController;
+  late final OwnerRestaurantController ownerRestaurantController;
+  late final OwnerMenuController ownerMenuController;
 
   @override
   void initState() {
@@ -42,6 +49,12 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
     restaurantController = RestaurantController(restaurantService);
 
     addressController = AddressController(AddressService(apiClient));
+
+    ownerRestaurantController = OwnerRestaurantController(
+      OwnerRestaurantService(apiClient),
+    );
+
+    ownerMenuController = OwnerMenuController(OwnerMenuService(apiClient));
   }
 
   @override
@@ -49,6 +62,8 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
     authController.dispose();
     restaurantController.dispose();
     addressController.dispose();
+    ownerRestaurantController.dispose();
+    ownerMenuController.dispose();
     super.dispose();
   }
 
@@ -73,14 +88,22 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
             );
           }
 
-          return authController.isAuthenticated
-              ? HomeScreen(
+          if (!authController.isAuthenticated) {
+            return LoginScreen(authController: authController);
+          }
+
+          return authController.user?.role == 'restaurant_owner'
+              ? OwnerHomeScreen(
+                  authController: authController,
+                  restaurantController: ownerRestaurantController,
+                  menuController: ownerMenuController,
+                )
+              : HomeScreen(
                   authController: authController,
                   restaurantController: restaurantController,
                   restaurantService: restaurantService,
                   addressController: addressController,
-                )
-              : LoginScreen(authController: authController);
+                );
         },
       ),
     );

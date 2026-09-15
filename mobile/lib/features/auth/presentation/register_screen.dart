@@ -20,6 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _password = TextEditingController();
   final _confirmation = TextEditingController();
   bool _hidePassword = true;
+  String _role = 'customer';
 
   @override
   void dispose() {
@@ -59,6 +60,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 validator: (value) => value == null || !value.contains('@')
                     ? 'Enter a valid email.'
                     : null,
+              ),
+              const SizedBox(height: 14),
+              SegmentedButton<String>(
+                segments: const [
+                  ButtonSegment(
+                    value: 'customer',
+                    label: Text('I want to order food'),
+                    icon: Icon(Icons.shopping_bag_outlined),
+                  ),
+                  ButtonSegment(
+                    value: 'restaurant_owner',
+                    label: Text('I own a restaurant'),
+                    icon: Icon(Icons.storefront_outlined),
+                  ),
+                ],
+                selected: {_role},
+                onSelectionChanged: (selection) =>
+                    setState(() => _role = selection.first),
               ),
               const SizedBox(height: 14),
               TextFormField(
@@ -134,6 +153,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _email.text,
       _phone.text,
       _password.text,
+      _role,
     );
     if (success && mounted) Navigator.of(context).pop();
   }

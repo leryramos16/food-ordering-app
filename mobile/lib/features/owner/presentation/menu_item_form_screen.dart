@@ -1,0 +1,162 @@
+import 'package:flutter/material.dart';
+
+import '../../restaurants/domain/menu_item.dart';
+import '../state/owner_menu_controller.dart';
+
+class MenuItemFormScreen extends StatefulWidget {
+  const MenuItemFormScreen({
+    super.key,
+    required this.controller,
+    required this.categoryId,
+    this.menuItem,
+  });
+
+  final OwnerMenuController controller;
+
+  /// The category this item belongs to (or will be added to).
+  final int categoryId;
+
+  /// Null when adding a new item, non-null when editing an existing one.
+  final MenuItem? menuItem;
+
+  @override
+  State<MenuItemFormScreen> createState() => _MenuItemFormScreenState();
+}
+
+class _MenuItemFormScreenState extends State<MenuItemFormScreen> {
+  final _formKey = GlobalKey<FormState>();
+  late final _name = TextEditingController(text: widget.menuItem?.name);
+  late final _description = TextEditingController(
+    text: widget.menuItem?.description,
+  );
+  late final _price = TextEditingController(
+    text: widget.menuItem?.price.toStringAsFixed(2),
+  );
+  late final _preparationTime = TextEditingController(
+    text: widget.menuItem?.preparationTimeMinutes?.toString(),
+  );
+  late bool _isAvailable = widget.menuItem?.isAvailable ?? true;
+
+  bool get _isEditing => widget.menuItem != null;
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _description.dispose();
+    _price.dispose();
+    _preparationTime.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: widget.controller,
+      builder: (context, _) => Scaffold(
+        appBar: AppBar(
+          title: Text(_isEditing ? 'Edit menu item' : 'Add menu item'),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _name,
+                  decoration: const InputDecoration(labelText: 'Item name'),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Enter a name.'
+                      : null,
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _description,
+                  maxLines: 3,
+                  decoration: const InputDecoration(
+                    labelText: 'Description (optional)',
+                  ),
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _price,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(labelText: 'Price'),
+                  validator: (value) {
+                    final parsed = double.tryParse(value ?? '');
+                    return parsed == null || parsed < 0
+                        ? 'Enter a valid price.'
+                        : null;
+                  },
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _preparationTime,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Preparation time in minutes (optional)',
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Available'),
+                  value: _isAvailable,
+                  onChanged: (value) => setState(() => _isAvailable = value),
+                ),
+                if (widget.controller.errorMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.controller.errorMessage!,
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                ],
+                const SizedBox(height: 20),
+                FilledButton(
+                  onPressed: widget.controller.isSubmitting ? null : _submit,
+                  child: widget.controller.isSubmitting
+                      ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(_isEditing ? 'Save changes' : 'Add item'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final preparationTime = _preparationTime.text.trim().isEmpty
+        ? null
+        : int.tryParse(_preparationTime.text.trim());
+
+    final success = _isEditing
+        ? await widget.controller.updateMenuItem(
+            id: widget.menuItem!.id,
+            name: _name.text,
+            description: _description.text,
+            price: double.parse(_price.text),
+            isAvailable: _isAvailable,
+            preparationTimeMinutes: preparationTime,
+          )
+        : await widget.controller.createMenuItem(
+            categoryId: widget.categoryId,
+            name: _name.text,
+            description: _description.text,
+            price: double.parse(_price.text),
+            isAvailable: _isAvailable,
+            preparationTimeMinutes: preparationTime,
+          );
+
+    if (success && mounted) Navigator.of(context).pop();
+  }
+}

@@ -21,6 +21,8 @@ class CategoryResource extends JsonResource
 
             'sort_order' => $this->sort_order,
 
+            'is_active' => $this->is_active,
+
             'items' => MenuItemResource::collection(
                 $this->whenLoaded('menuItems')
             ),

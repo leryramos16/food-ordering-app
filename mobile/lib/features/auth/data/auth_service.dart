@@ -13,6 +13,7 @@ class AuthService {
     required String email,
     String? phone,
     required String password,
+    required String role,
   }) async {
     final response = await _api.post(
       '/auth/register',
@@ -22,6 +23,7 @@ class AuthService {
         'phone': phone?.trim().isEmpty == true ? null : phone?.trim(),
         'password': password,
         'password_confirmation': password,
+        'role': role,
         'device_name': 'food-ordering-mobile',
       },
     );

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class RegisterRequest extends FormRequest
@@ -19,6 +20,7 @@ class RegisterRequest extends FormRequest
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:30', 'unique:users,phone'],
             'password' => ['required', 'confirmed', Password::min(8)],
+            'role' => ['nullable', Rule::in(['customer', 'restaurant_owner'])],
             'device_name' => ['nullable', 'string', 'max:100'],
         ];
     }

@@ -23,7 +23,7 @@ class AuthController extends Controller
             'email' => strtolower($data['email']),
             'phone' => $data['phone'] ?? null,
             'password' => $data['password'],
-            'role' => 'customer',
+            'role' => $data['role'] ?? 'customer',
             'is_active' => true,
         ]);
 

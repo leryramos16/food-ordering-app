@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\OwnerCategoryController;
+use App\Http\Controllers\Api\OwnerMenuItemController;
+use App\Http\Controllers\Api\OwnerRestaurantController;
 use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\Api\OrderController;
 use Illuminate\Support\Facades\Route;
@@ -39,3 +42,23 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/addresses/{address}', [AddressController::class, 'update']);
     Route::delete('/addresses/{address}', [AddressController::class, 'destroy']);
 });
+
+Route::middleware(['auth:sanctum', 'role:restaurant_owner'])
+    ->prefix('owner')
+    ->group(function () {
+        Route::get('/restaurant', [OwnerRestaurantController::class, 'show']);
+        Route::post('/restaurant', [OwnerRestaurantController::class, 'store']);
+        Route::put('/restaurant', [OwnerRestaurantController::class, 'update']);
+
+        Route::get('/categories', [OwnerCategoryController::class, 'index']);
+        Route::post('/categories', [OwnerCategoryController::class, 'store']);
+        Route::put('/categories/{category}', [OwnerCategoryController::class, 'update']);
+        Route::delete('/categories/{category}', [OwnerCategoryController::class, 'destroy']);
+
+        Route::post(
+            '/categories/{category}/menu-items',
+            [OwnerMenuItemController::class, 'store'],
+        );
+        Route::put('/menu-items/{menuItem}', [OwnerMenuItemController::class, 'update']);
+        Route::delete('/menu-items/{menuItem}', [OwnerMenuItemController::class, 'destroy']);
+    });

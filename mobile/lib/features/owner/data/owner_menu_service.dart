@@ -101,6 +101,14 @@ class OwnerMenuService {
     return _api.delete('/owner/menu-items/$id', authenticated: true);
   }
 
+  Future<void> uploadMenuItemImage(int id, String filePath) {
+    return _api.uploadFile(
+      '/owner/menu-items/$id/image',
+      fieldName: 'image',
+      filePath: filePath,
+    );
+  }
+
   Map<String, dynamic> _menuItemBody({
     required String name,
     String? description,

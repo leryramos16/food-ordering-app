@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../state/owner_menu_controller.dart';
 import 'category_form_screen.dart';
 import 'menu_item_form_screen.dart';
+import 'owner_scaffold.dart';
 
 class OwnerMenuScreen extends StatefulWidget {
   const OwnerMenuScreen({super.key, required this.controller});
@@ -23,7 +24,7 @@ class _OwnerMenuScreenState extends State<OwnerMenuScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return OwnerScaffold(
       appBar: AppBar(title: const Text('My menu')),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => Navigator.of(context).push(

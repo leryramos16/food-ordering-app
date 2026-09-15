@@ -74,4 +74,21 @@ class OwnerRestaurantController extends ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<bool> uploadImage(String filePath) async {
+    isSubmitting = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      restaurant = await _service.uploadImage(filePath);
+      return true;
+    } catch (error) {
+      errorMessage = error.toString();
+      return false;
+    } finally {
+      isSubmitting = false;
+      notifyListeners();
+    }
+  }
 }

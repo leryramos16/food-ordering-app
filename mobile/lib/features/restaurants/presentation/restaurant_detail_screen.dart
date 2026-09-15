@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../data/restaurant_service.dart';
+import '../domain/category.dart';
+import '../domain/menu_item.dart';
+import '../domain/restaurant.dart';
 import '../state/restaurant_menu_controller.dart';
 
 class RestaurantDetailScreen extends StatefulWidget {
@@ -40,124 +43,452 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.restaurantName)),
       body: AnimatedBuilder(
         animation: _controller,
         builder: (context, _) {
           if (_controller.isLoading && _controller.restaurant == null) {
-            return const Center(child: CircularProgressIndicator());
+            return Scaffold(
+              appBar: AppBar(title: Text(widget.restaurantName)),
+              body: const Center(child: CircularProgressIndicator()),
+            );
           }
 
           if (_controller.errorMessage != null &&
               _controller.restaurant == null) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.error_outline, size: 48),
-                    const SizedBox(height: 12),
-                    Text(_controller.errorMessage!, textAlign: TextAlign.center),
-                    const SizedBox(height: 16),
-                    FilledButton(
-                      onPressed: () => _controller.loadMenu(widget.restaurantId),
-                      child: const Text('Try Again'),
-                    ),
-                  ],
+            return Scaffold(
+              appBar: AppBar(title: Text(widget.restaurantName)),
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48),
+                      const SizedBox(height: 12),
+                      Text(_controller.errorMessage!, textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: () => _controller.loadMenu(widget.restaurantId),
+                        child: const Text('Try Again'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
           }
 
           final restaurant = _controller.restaurant!;
+          final categories = restaurant.categories;
 
-          return RefreshIndicator(
-            onRefresh: () => _controller.loadMenu(widget.restaurantId),
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        restaurant.name,
-                        style: Theme.of(context).textTheme.headlineSmall,
+          if (categories.isEmpty) {
+            return Scaffold(
+              appBar: AppBar(title: Text(restaurant.name)),
+              body: const Center(child: Text('No menu items yet.')),
+            );
+          }
+
+          return DefaultTabController(
+            length: categories.length,
+            child: RefreshIndicator(
+              onRefresh: () => _controller.loadMenu(widget.restaurantId),
+              child: NestedScrollView(
+                headerSliverBuilder: (context, innerBoxIsScrolled) => [
+                  SliverAppBar(
+                    pinned: true,
+                    expandedHeight: 200,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: _RestaurantBanner(restaurant: restaurant),
+                    ),
+                  ),
+                  SliverToBoxAdapter(
+                    child: _RestaurantInfoBar(restaurant: restaurant),
+                  ),
+                  SliverPersistentHeader(
+                    pinned: true,
+                    delegate: _CategoryTabBarDelegate(
+                      TabBar(
+                        isScrollable: true,
+                        tabAlignment: TabAlignment.start,
+                        tabs: [
+                          for (final category in categories) Tab(text: category.name),
+                        ],
                       ),
                     ),
-                    Chip(label: Text(restaurant.isOpen ? 'Open' : 'Closed')),
-                  ],
-                ),
-
-                if (restaurant.description != null) ...[
-                  const SizedBox(height: 8),
-                  Text(restaurant.description!),
+                  ),
                 ],
-
-                const SizedBox(height: 12),
-
-                Row(
+                body: TabBarView(
                   children: [
-                    const Icon(Icons.location_on_outlined, size: 18),
-                    const SizedBox(width: 6),
-                    Expanded(child: Text(restaurant.address)),
+                    for (final category in categories)
+                      _CategoryMenuGrid(category: category),
                   ],
                 ),
-
-                const SizedBox(height: 8),
-
-                Text(
-                  'Delivery fee: '
-                  '₱${restaurant.deliveryFee.toStringAsFixed(2)}'
-                  '   •   '
-                  'Minimum order: '
-                  '₱${restaurant.minimumOrder.toStringAsFixed(2)}',
-                ),
-
-                const SizedBox(height: 24),
-
-                if (restaurant.categories.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 32),
-                    child: Center(child: Text('No menu items yet.')),
-                  ),
-
-                for (final category in restaurant.categories) ...[
-                  Text(
-                    category.name,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
-                  const SizedBox(height: 8),
-
-                  for (final item in category.items)
-                    Card(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      child: ListTile(
-                        title: Text(item.name),
-                        subtitle: item.description != null
-                            ? Text(item.description!)
-                            : null,
-                        trailing: Text(
-                          '₱${item.price.toStringAsFixed(2)}',
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        enabled: item.isAvailable,
-                        onTap: item.isAvailable
-                            ? () {
-                                // Next feature:
-                                // Add to cart.
-                              }
-                            : null,
-                      ),
-                    ),
-
-                  const SizedBox(height: 16),
-                ],
-              ],
+              ),
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _RestaurantBanner extends StatelessWidget {
+  const _RestaurantBanner({required this.restaurant});
+
+  final Restaurant restaurant;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final imageUrl = restaurant.imageUrl;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (imageUrl != null && imageUrl.isNotEmpty)
+          Image.network(
+            imageUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, _, _) => _gradient(colorScheme),
+          )
+        else
+          _gradient(colorScheme),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.black.withValues(alpha: 0.05), Colors.black.withValues(alpha: 0.65)],
+            ),
+          ),
+        ),
+        Positioned(
+          left: 16,
+          right: 16,
+          bottom: 14,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Text(
+                  restaurant.name,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: restaurant.isOpen
+                      ? Colors.green.shade600
+                      : Colors.black.withValues(alpha: 0.6),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  restaurant.isOpen ? 'Open' : 'Closed',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _gradient(ColorScheme colorScheme) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [colorScheme.primary, colorScheme.primaryContainer],
+        ),
+      ),
+      child: Icon(
+        Icons.restaurant_outlined,
+        size: 56,
+        color: colorScheme.onPrimary.withValues(alpha: 0.5),
+      ),
+    );
+  }
+}
+
+class _RestaurantInfoBar extends StatelessWidget {
+  const _RestaurantInfoBar({required this.restaurant});
+
+  final Restaurant restaurant;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (restaurant.description != null) ...[
+            Text(
+              restaurant.description!,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 10),
+          ],
+          Row(
+            children: [
+              Icon(Icons.location_on_outlined, size: 16, color: colorScheme.onSurfaceVariant),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  restaurant.address,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              _pill(
+                context,
+                Icons.delivery_dining_outlined,
+                '₱${restaurant.deliveryFee.toStringAsFixed(2)} delivery',
+              ),
+              const SizedBox(width: 8),
+              _pill(
+                context,
+                Icons.shopping_bag_outlined,
+                'Min ₱${restaurant.minimumOrder.toStringAsFixed(2)}',
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _pill(BuildContext context, IconData icon, String label) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: colorScheme.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CategoryTabBarDelegate extends SliverPersistentHeaderDelegate {
+  _CategoryTabBarDelegate(this.tabBar);
+
+  final TabBar tabBar;
+
+  @override
+  double get minExtent => tabBar.preferredSize.height;
+
+  @override
+  double get maxExtent => tabBar.preferredSize.height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return ColoredBox(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: tabBar,
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _CategoryTabBarDelegate oldDelegate) {
+    return oldDelegate.tabBar != tabBar;
+  }
+}
+
+class _CategoryMenuGrid extends StatelessWidget {
+  const _CategoryMenuGrid({required this.category});
+
+  final Category category;
+
+  @override
+  Widget build(BuildContext context) {
+    if (category.items.isEmpty) {
+      return const Center(child: Text('No items in this category yet.'));
+    }
+
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: category.items.length,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 14,
+        crossAxisSpacing: 14,
+        childAspectRatio: 0.72,
+      ),
+      itemBuilder: (context, index) => _MenuItemTile(item: category.items[index]),
+    );
+  }
+}
+
+class _MenuItemTile extends StatelessWidget {
+  const _MenuItemTile({required this.item});
+
+  final MenuItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Opacity(
+      opacity: item.isAvailable ? 1 : 0.5,
+      child: Card(
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _itemImage(colorScheme),
+                  Positioned(
+                    right: 8,
+                    bottom: 8,
+                    child: _AddButton(enabled: item.isAvailable, item: item),
+                  ),
+                  if (!item.isAvailable)
+                    Positioned(
+                      left: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'Unavailable',
+                          style: TextStyle(color: Colors.white, fontSize: 11),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    '₱${item.price.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _itemImage(ColorScheme colorScheme) {
+    final imageUrl = item.imageUrl;
+
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return Container(
+        color: colorScheme.surfaceContainerHighest,
+        child: Icon(
+          Icons.fastfood_outlined,
+          size: 32,
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        ),
+      );
+    }
+
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (context, _, _) => Container(
+        color: colorScheme.surfaceContainerHighest,
+        child: Icon(
+          Icons.fastfood_outlined,
+          size: 32,
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        ),
+      ),
+    );
+  }
+}
+
+class _AddButton extends StatelessWidget {
+  const _AddButton({required this.enabled, required this.item});
+
+  final bool enabled;
+  final MenuItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: enabled ? colorScheme.primary : colorScheme.surfaceContainerHighest,
+      shape: const CircleBorder(),
+      elevation: 2,
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: enabled
+            ? () => ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Cart is coming soon — ${item.name} noted!')),
+              )
+            : null,
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(
+            Icons.add,
+            size: 18,
+            color: enabled ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }

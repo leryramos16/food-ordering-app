@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../restaurants/domain/category.dart';
 import '../state/owner_menu_controller.dart';
+import 'owner_scaffold.dart';
 
 class CategoryFormScreen extends StatefulWidget {
   const CategoryFormScreen({super.key, required this.controller, this.category});
@@ -36,7 +37,7 @@ class _CategoryFormScreenState extends State<CategoryFormScreen> {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: widget.controller,
-      builder: (context, _) => Scaffold(
+      builder: (context, _) => OwnerScaffold(
         appBar: AppBar(
           title: Text(_isEditing ? 'Edit category' : 'Add category'),
         ),

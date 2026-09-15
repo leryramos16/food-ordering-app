@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../restaurants/domain/menu_item.dart';
 import '../state/owner_menu_controller.dart';
+import 'owner_photo_picker.dart';
+import 'owner_scaffold.dart';
 
 class MenuItemFormScreen extends StatefulWidget {
   const MenuItemFormScreen({
@@ -39,6 +41,20 @@ class _MenuItemFormScreenState extends State<MenuItemFormScreen> {
 
   bool get _isEditing => widget.menuItem != null;
 
+  /// The item's live data from the controller (so an uploaded photo shows
+  /// up immediately), falling back to the snapshot this screen opened with.
+  MenuItem? get _currentItem {
+    if (widget.menuItem == null) return null;
+
+    for (final category in widget.controller.categories) {
+      for (final item in category.items) {
+        if (item.id == widget.menuItem!.id) return item;
+      }
+    }
+
+    return widget.menuItem;
+  }
+
   @override
   void dispose() {
     _name.dispose();
@@ -52,7 +68,7 @@ class _MenuItemFormScreenState extends State<MenuItemFormScreen> {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: widget.controller,
-      builder: (context, _) => Scaffold(
+      builder: (context, _) => OwnerScaffold(
         appBar: AppBar(
           title: Text(_isEditing ? 'Edit menu item' : 'Add menu item'),
         ),
@@ -63,6 +79,26 @@ class _MenuItemFormScreenState extends State<MenuItemFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (_isEditing) ...[
+                  OwnerPhotoPicker(
+                    imageUrl: _currentItem?.imageUrl,
+                    isUploading: widget.controller.isSubmitting,
+                    placeholderIcon: Icons.fastfood_outlined,
+                    onPicked: (path) => widget.controller.uploadMenuItemImage(
+                      widget.menuItem!.id,
+                      path,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ] else ...[
+                  Text(
+                    'You can add a photo once the item is created.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
                 TextFormField(
                   controller: _name,
                   decoration: const InputDecoration(labelText: 'Item name'),

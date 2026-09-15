@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\UploadsImages;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMenuItemRequest;
 use App\Http\Requests\UpdateMenuItemRequest;
@@ -13,6 +14,8 @@ use Illuminate\Http\Request;
 
 class OwnerMenuItemController extends Controller
 {
+    use UploadsImages;
+
     public function store(StoreMenuItemRequest $request, Category $category): JsonResponse
     {
         $this->authorizeCategory($request, $category);
@@ -52,6 +55,24 @@ class OwnerMenuItemController extends Controller
             'success' => true,
             'message' => 'Menu item deleted successfully.',
         ]);
+    }
+
+    public function uploadImage(Request $request, MenuItem $menuItem): JsonResponse
+    {
+        $this->authorizeMenuItem($request, $menuItem);
+
+        $this->forgetStoredImage($menuItem->image_url);
+
+        $menuItem->update([
+            'image_url' => $this->storeUploadedImage($request, 'menu-items'),
+        ]);
+
+        return (new MenuItemResource($menuItem->fresh()))
+            ->additional([
+                'success' => true,
+                'message' => 'Photo updated successfully.',
+            ])
+            ->response();
     }
 
     private function restaurantId(Request $request): ?int

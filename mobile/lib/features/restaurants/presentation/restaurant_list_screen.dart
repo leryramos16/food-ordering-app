@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/restaurant_service.dart';
+import '../domain/restaurant.dart';
 import '../state/restaurant_controller.dart';
 import 'restaurant_detail_screen.dart';
 
@@ -71,66 +72,14 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
             itemBuilder: (context, index) {
               final restaurant = controller.restaurants[index];
 
-              return Card(
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => RestaurantDetailScreen(
-                        restaurantId: restaurant.id,
-                        restaurantName: restaurant.name,
-                        service: widget.service,
-                      ),
-                    ),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                restaurant.name,
-                                style: Theme.of(context).textTheme.titleLarge,
-                              ),
-                            ),
-                            Chip(
-                              label: Text(
-                                restaurant.isOpen ? 'Open' : 'Closed',
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        if (restaurant.description != null) ...[
-                          const SizedBox(height: 8),
-                          Text(restaurant.description!),
-                        ],
-
-                        const SizedBox(height: 12),
-
-                        Row(
-                          children: [
-                            const Icon(Icons.location_on_outlined, size: 18),
-                            const SizedBox(width: 6),
-                            Expanded(child: Text(restaurant.address)),
-                          ],
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        Text(
-                          'Delivery fee: '
-                          '₱${restaurant.deliveryFee.toStringAsFixed(2)}',
-                        ),
-
-                        Text(
-                          'Minimum order: '
-                          '₱${restaurant.minimumOrder.toStringAsFixed(2)}',
-                        ),
-                      ],
+              return _RestaurantCard(
+                restaurant: restaurant,
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => RestaurantDetailScreen(
+                      restaurantId: restaurant.id,
+                      restaurantName: restaurant.name,
+                      service: widget.service,
                     ),
                   ),
                 ),
@@ -139,6 +88,201 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _RestaurantCard extends StatelessWidget {
+  const _RestaurantCard({required this.restaurant, required this.onTap});
+
+  final Restaurant restaurant;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Card(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Stack(
+              children: [
+                _RestaurantImage(restaurant: restaurant),
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: restaurant.isOpen
+                          ? Colors.green.shade600
+                          : Colors.black.withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      restaurant.isOpen ? 'Open' : 'Closed',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    restaurant.name,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (restaurant.description != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      restaurant.description!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          restaurant.address,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      _InfoPill(
+                        icon: Icons.delivery_dining_outlined,
+                        label: '₱${restaurant.deliveryFee.toStringAsFixed(2)}',
+                      ),
+                      const SizedBox(width: 8),
+                      _InfoPill(
+                        icon: Icons.shopping_bag_outlined,
+                        label: 'Min ₱${restaurant.minimumOrder.toStringAsFixed(2)}',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RestaurantImage extends StatelessWidget {
+  const _RestaurantImage({required this.restaurant});
+
+  final Restaurant restaurant;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = restaurant.imageUrl;
+
+    if (imageUrl == null || imageUrl.isEmpty) {
+      return _placeholder(context);
+    }
+
+    return Image.network(
+      imageUrl,
+      height: 140,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      errorBuilder: (context, _, _) => _placeholder(context),
+    );
+  }
+
+  Widget _placeholder(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      height: 140,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colorScheme.primaryContainer,
+            colorScheme.primary.withValues(alpha: 0.6),
+          ],
+        ),
+      ),
+      child: Icon(
+        Icons.restaurant_outlined,
+        size: 40,
+        color: colorScheme.onPrimaryContainer,
+      ),
+    );
+  }
+}
+
+class _InfoPill extends StatelessWidget {
+  const _InfoPill({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: colorScheme.onSurfaceVariant),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

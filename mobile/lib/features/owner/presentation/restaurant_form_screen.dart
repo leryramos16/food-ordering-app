@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../restaurants/domain/restaurant.dart';
 import '../state/owner_restaurant_controller.dart';
+import 'owner_photo_picker.dart';
+import 'owner_scaffold.dart';
 
 class RestaurantFormScreen extends StatefulWidget {
   const RestaurantFormScreen({super.key, required this.controller});
@@ -46,7 +48,7 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: widget.controller,
-      builder: (context, _) => Scaffold(
+      builder: (context, _) => OwnerScaffold(
         appBar: AppBar(
           title: Text(_isEditing ? 'Edit restaurant' : 'Create your restaurant'),
         ),
@@ -57,6 +59,22 @@ class _RestaurantFormScreenState extends State<RestaurantFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (_isEditing) ...[
+                  OwnerPhotoPicker(
+                    imageUrl: widget.controller.restaurant?.imageUrl,
+                    isUploading: widget.controller.isSubmitting,
+                    onPicked: (path) => widget.controller.uploadImage(path),
+                  ),
+                  const SizedBox(height: 20),
+                ] else ...[
+                  Text(
+                    'You can add a photo once your restaurant is created.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                ],
                 TextFormField(
                   controller: _name,
                   decoration: const InputDecoration(labelText: 'Restaurant name'),

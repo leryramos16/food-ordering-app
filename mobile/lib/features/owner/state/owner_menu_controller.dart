@@ -110,6 +110,10 @@ class OwnerMenuController extends ChangeNotifier {
     return _mutate(() => _service.deleteMenuItem(id));
   }
 
+  Future<bool> uploadMenuItemImage(int id, String filePath) {
+    return _mutate(() => _service.uploadMenuItemImage(id, filePath));
+  }
+
   Future<bool> _mutate(Future<void> Function() action) async {
     isSubmitting = true;
     errorMessage = null;

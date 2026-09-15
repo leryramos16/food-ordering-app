@@ -23,9 +23,25 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final firstName = authController.user?.name.split(' ').first ?? '';
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Hi, ${authController.user?.name ?? ''}'),
+        toolbarHeight: 68,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Hi, $firstName 👋', style: const TextStyle(fontSize: 15)),
+            const SizedBox(height: 2),
+            Text(
+              'What are you craving today?',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
         actions: [
           IconButton(
             onPressed: () => Navigator.of(context).push(
@@ -41,6 +57,7 @@ class HomeScreen extends StatelessWidget {
                 ? null
                 : authController.logout,
             icon: const Icon(Icons.logout),
+            tooltip: 'Log out',
           ),
         ],
       ),

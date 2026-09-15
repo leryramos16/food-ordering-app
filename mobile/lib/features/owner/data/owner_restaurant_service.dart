@@ -69,6 +69,17 @@ class OwnerRestaurantService {
     return Restaurant.fromJson(data);
   }
 
+  Future<Restaurant> uploadImage(String filePath) async {
+    final response = await _api.uploadFile(
+      '/owner/restaurant/image',
+      fieldName: 'image',
+      filePath: filePath,
+    );
+
+    final data = Map<String, dynamic>.from(response['data'] as Map);
+    return Restaurant.fromJson(data);
+  }
+
   Map<String, dynamic> _body({
     required String name,
     String? description,

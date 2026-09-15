@@ -37,6 +37,43 @@ class ApiClient {
     return _request('DELETE', path, authenticated: authenticated);
   }
 
+  /// Uploads a single file as multipart/form-data under the given field
+  /// name (e.g. "image"). Used for photo uploads, where a JSON body isn't
+  /// an option.
+  Future<Map<String, dynamic>> uploadFile(
+    String path, {
+    required String fieldName,
+    required String filePath,
+    bool authenticated = true,
+  }) async {
+    final uri = Uri.parse('${ApiConfig.baseUrl}$path');
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Accept'] = 'application/json';
+
+    if (authenticated) {
+      final token = await _tokenStorage.read();
+      if (token != null) request.headers['Authorization'] = 'Bearer $token';
+    }
+
+    request.files.add(
+      await http.MultipartFile.fromPath(fieldName, filePath),
+    );
+
+    final streamedResponse = await _client.send(request);
+    final response = await http.Response.fromStream(streamedResponse);
+
+    final decoded = response.body.isEmpty
+        ? <String, dynamic>{}
+        : jsonDecode(response.body);
+    final json = Map<String, dynamic>.from(decoded as Map);
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw ApiException.fromResponse(response.statusCode, json);
+    }
+
+    return json;
+  }
+
   Future<Map<String, dynamic>> _request(
     String method,
     String path, {

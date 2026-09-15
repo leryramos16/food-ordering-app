@@ -49,6 +49,7 @@ Route::middleware(['auth:sanctum', 'role:restaurant_owner'])
         Route::get('/restaurant', [OwnerRestaurantController::class, 'show']);
         Route::post('/restaurant', [OwnerRestaurantController::class, 'store']);
         Route::put('/restaurant', [OwnerRestaurantController::class, 'update']);
+        Route::post('/restaurant/image', [OwnerRestaurantController::class, 'uploadImage']);
 
         Route::get('/categories', [OwnerCategoryController::class, 'index']);
         Route::post('/categories', [OwnerCategoryController::class, 'store']);
@@ -61,4 +62,8 @@ Route::middleware(['auth:sanctum', 'role:restaurant_owner'])
         );
         Route::put('/menu-items/{menuItem}', [OwnerMenuItemController::class, 'update']);
         Route::delete('/menu-items/{menuItem}', [OwnerMenuItemController::class, 'destroy']);
+        Route::post(
+            '/menu-items/{menuItem}/image',
+            [OwnerMenuItemController::class, 'uploadImage'],
+        );
     });

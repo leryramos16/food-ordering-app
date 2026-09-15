@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\UploadsImages;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreRestaurantRequest;
 use App\Http\Requests\UpdateRestaurantRequest;
@@ -12,6 +13,8 @@ use Illuminate\Validation\ValidationException;
 
 class OwnerRestaurantController extends Controller
 {
+    use UploadsImages;
+
     public function show(Request $request): JsonResponse
     {
         $restaurant = $request->user()->restaurants()->first();
@@ -58,6 +61,26 @@ class OwnerRestaurantController extends Controller
             ->additional([
                 'success' => true,
                 'message' => 'Restaurant updated successfully.',
+            ])
+            ->response();
+    }
+
+    public function uploadImage(Request $request): JsonResponse
+    {
+        $restaurant = $request->user()->restaurants()->first();
+
+        abort_unless($restaurant, 404, 'You do not have a restaurant yet.');
+
+        $this->forgetStoredImage($restaurant->image_url);
+
+        $restaurant->update([
+            'image_url' => $this->storeUploadedImage($request, 'restaurants'),
+        ]);
+
+        return (new RestaurantResource($restaurant->fresh()))
+            ->additional([
+                'success' => true,
+                'message' => 'Photo updated successfully.',
             ])
             ->response();
     }

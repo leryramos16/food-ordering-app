@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'core/api_client.dart';
+import 'core/app_theme.dart';
 import 'core/token_storage.dart';
 import 'features/addresses/data/address_service.dart';
 import 'features/addresses/state/address_controller.dart';
@@ -72,13 +73,7 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
     return MaterialApp(
       title: 'Food Ordering',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xffe85d04)),
-        useMaterial3: true,
-        inputDecorationTheme: const InputDecorationTheme(
-          border: OutlineInputBorder(),
-        ),
-      ),
+      theme: buildAppTheme(const Color(0xffe85d04)),
       home: AnimatedBuilder(
         animation: authController,
         builder: (context, _) {

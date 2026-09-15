@@ -6,6 +6,8 @@ import 'features/auth/data/auth_service.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/state/auth_controller.dart';
 import 'features/home/presentation/home_screen.dart';
+import 'features/restaurants/data/restaurant_service.dart';
+import 'features/restaurants/state/restaurant_controller.dart';
 
 class FoodOrderingEstApp extends StatefulWidget {
   const FoodOrderingEstApp({super.key});
@@ -15,20 +17,30 @@ class FoodOrderingEstApp extends StatefulWidget {
 }
 
 class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
+  late final TokenStorage storage;
+  late final ApiClient apiClient;
+
   late final AuthController authController;
+  late final RestaurantController restaurantController;
 
   @override
   void initState() {
     super.initState();
-    final storage = TokenStorage();
-    final apiClient = ApiClient(storage);
+
+    storage = TokenStorage();
+
+    apiClient = ApiClient(storage);
+
     authController = AuthController(AuthService(apiClient, storage))
       ..restoreSession();
+
+    restaurantController = RestaurantController(RestaurantService(apiClient));
   }
 
   @override
   void dispose() {
     authController.dispose();
+    restaurantController.dispose();
     super.dispose();
   }
 
@@ -54,7 +66,10 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
           }
 
           return authController.isAuthenticated
-              ? HomeScreen(authController: authController)
+              ? HomeScreen(
+                  authController: authController,
+                  restaurantController: restaurantController,
+                )
               : LoginScreen(authController: authController);
         },
       ),

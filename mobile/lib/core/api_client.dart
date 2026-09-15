@@ -25,6 +25,18 @@ class ApiClient {
     return _request('POST', path, body: body, authenticated: authenticated);
   }
 
+  Future<Map<String, dynamic>> put(
+    String path, {
+    Map<String, dynamic>? body,
+    bool authenticated = false,
+  }) {
+    return _request('PUT', path, body: body, authenticated: authenticated);
+  }
+
+  Future<Map<String, dynamic>> delete(String path, {bool authenticated = false}) {
+    return _request('DELETE', path, authenticated: authenticated);
+  }
+
   Future<Map<String, dynamic>> _request(
     String method,
     String path, {
@@ -42,13 +54,20 @@ class ApiClient {
     }
 
     final uri = Uri.parse('${ApiConfig.baseUrl}$path');
-    final response = method == 'GET'
-        ? await _client.get(uri, headers: headers)
-        : await _client.post(
-            uri,
-            headers: headers,
-            body: jsonEncode(body ?? {}),
-          );
+    final response = switch (method) {
+      'GET' => await _client.get(uri, headers: headers),
+      'DELETE' => await _client.delete(uri, headers: headers),
+      'PUT' => await _client.put(
+        uri,
+        headers: headers,
+        body: jsonEncode(body ?? {}),
+      ),
+      _ => await _client.post(
+        uri,
+        headers: headers,
+        body: jsonEncode(body ?? {}),
+      ),
+    };
 
     final decoded = response.body.isEmpty
         ? <String, dynamic>{}

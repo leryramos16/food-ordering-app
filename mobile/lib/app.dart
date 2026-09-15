@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'core/api_client.dart';
 import 'core/token_storage.dart';
+import 'features/addresses/data/address_service.dart';
+import 'features/addresses/state/address_controller.dart';
 import 'features/auth/data/auth_service.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/auth/state/auth_controller.dart';
@@ -23,6 +25,7 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
   late final AuthController authController;
   late final RestaurantService restaurantService;
   late final RestaurantController restaurantController;
+  late final AddressController addressController;
 
   @override
   void initState() {
@@ -37,12 +40,15 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
 
     restaurantService = RestaurantService(apiClient);
     restaurantController = RestaurantController(restaurantService);
+
+    addressController = AddressController(AddressService(apiClient));
   }
 
   @override
   void dispose() {
     authController.dispose();
     restaurantController.dispose();
+    addressController.dispose();
     super.dispose();
   }
 
@@ -72,6 +78,7 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
                   authController: authController,
                   restaurantController: restaurantController,
                   restaurantService: restaurantService,
+                  addressController: addressController,
                 )
               : LoginScreen(authController: authController);
         },

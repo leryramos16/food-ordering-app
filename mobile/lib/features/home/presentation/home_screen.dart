@@ -5,6 +5,7 @@ import '../../addresses/state/address_controller.dart';
 import '../../auth/state/auth_controller.dart';
 import '../../cart/presentation/cart_icon_button.dart';
 import '../../cart/state/cart_controller.dart';
+import '../../orders/state/checkout_controller.dart';
 import '../../restaurants/data/restaurant_service.dart';
 import '../../restaurants/presentation/restaurant_list_screen.dart';
 import '../../restaurants/state/restaurant_controller.dart';
@@ -17,6 +18,7 @@ class HomeScreen extends StatelessWidget {
     required this.restaurantService,
     required this.addressController,
     required this.cartController,
+    required this.checkoutController,
   });
 
   final AuthController authController;
@@ -24,6 +26,7 @@ class HomeScreen extends StatelessWidget {
   final RestaurantService restaurantService;
   final AddressController addressController;
   final CartController cartController;
+  final CheckoutController checkoutController;
 
   @override
   Widget build(BuildContext context) {
@@ -47,7 +50,11 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
         actions: [
-          CartIconButton(controller: cartController),
+          CartIconButton(
+            controller: cartController,
+            addressController: addressController,
+            checkoutController: checkoutController,
+          ),
           IconButton(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
@@ -71,6 +78,8 @@ class HomeScreen extends StatelessWidget {
         controller: restaurantController,
         service: restaurantService,
         cartController: cartController,
+        addressController: addressController,
+        checkoutController: checkoutController,
       ),
     );
   }

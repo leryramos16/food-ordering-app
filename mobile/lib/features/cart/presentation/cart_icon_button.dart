@@ -1,12 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../../addresses/state/address_controller.dart';
+import '../../orders/state/checkout_controller.dart';
 import '../state/cart_controller.dart';
 import 'cart_screen.dart';
 
 class CartIconButton extends StatelessWidget {
-  const CartIconButton({super.key, required this.controller});
+  const CartIconButton({
+    super.key,
+    required this.controller,
+    required this.addressController,
+    required this.checkoutController,
+  });
 
   final CartController controller;
+  final AddressController addressController;
+  final CheckoutController checkoutController;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +27,11 @@ class CartIconButton extends StatelessWidget {
           IconButton(
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => CartScreen(controller: controller),
+                builder: (_) => CartScreen(
+                  controller: controller,
+                  addressController: addressController,
+                  checkoutController: checkoutController,
+                ),
               ),
             ),
             icon: const Icon(Icons.shopping_cart_outlined),

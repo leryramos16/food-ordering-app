@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../addresses/state/address_controller.dart';
 import '../../cart/presentation/cart_icon_button.dart';
 import '../../cart/presentation/cart_screen.dart';
 import '../../cart/state/cart_controller.dart';
+import '../../orders/state/checkout_controller.dart';
 import '../data/restaurant_service.dart';
 import '../domain/category.dart';
 import '../domain/menu_item.dart';
@@ -16,12 +18,16 @@ class RestaurantDetailScreen extends StatefulWidget {
     required this.restaurantName,
     required this.service,
     required this.cartController,
+    required this.addressController,
+    required this.checkoutController,
   });
 
   final int restaurantId;
   final String restaurantName;
   final RestaurantService service;
   final CartController cartController;
+  final AddressController addressController;
+  final CheckoutController checkoutController;
 
   @override
   State<RestaurantDetailScreen> createState() => _RestaurantDetailScreenState();
@@ -106,7 +112,11 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                     pinned: true,
                     expandedHeight: 200,
                     actions: [
-                      CartIconButton(controller: widget.cartController),
+                      CartIconButton(
+                        controller: widget.cartController,
+                        addressController: widget.addressController,
+                        checkoutController: widget.checkoutController,
+                      ),
                     ],
                     flexibleSpace: FlexibleSpaceBar(
                       background: _RestaurantBanner(restaurant: restaurant),
@@ -148,7 +158,11 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
         animation: widget.cartController,
         builder: (context, _) {
           if (widget.cartController.isEmpty) return const SizedBox.shrink();
-          return _ViewCartBar(cartController: widget.cartController);
+          return _ViewCartBar(
+            cartController: widget.cartController,
+            addressController: widget.addressController,
+            checkoutController: widget.checkoutController,
+          );
         },
       ),
     );
@@ -156,9 +170,15 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
 }
 
 class _ViewCartBar extends StatelessWidget {
-  const _ViewCartBar({required this.cartController});
+  const _ViewCartBar({
+    required this.cartController,
+    required this.addressController,
+    required this.checkoutController,
+  });
 
   final CartController cartController;
+  final AddressController addressController;
+  final CheckoutController checkoutController;
 
   @override
   Widget build(BuildContext context) {
@@ -174,7 +194,11 @@ class _ViewCartBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => CartScreen(controller: cartController),
+                builder: (_) => CartScreen(
+                  controller: cartController,
+                  addressController: addressController,
+                  checkoutController: checkoutController,
+                ),
               ),
             ),
             child: Padding(

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../addresses/state/address_controller.dart';
+import '../../cart/state/cart_controller.dart';
+import '../../orders/state/checkout_controller.dart';
 import '../data/restaurant_service.dart';
 import '../domain/restaurant.dart';
 import '../state/restaurant_controller.dart';
 import 'restaurant_detail_screen.dart';
-import '../../cart/state/cart_controller.dart';
 
 class RestaurantListScreen extends StatefulWidget {
   const RestaurantListScreen({
@@ -12,11 +14,15 @@ class RestaurantListScreen extends StatefulWidget {
     required this.controller,
     required this.service,
     required this.cartController,
+    required this.addressController,
+    required this.checkoutController,
   });
 
   final RestaurantController controller;
   final RestaurantService service;
   final CartController cartController;
+  final AddressController addressController;
+  final CheckoutController checkoutController;
 
   @override
   State<RestaurantListScreen> createState() => _RestaurantListScreenState();
@@ -84,6 +90,8 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                       restaurantName: restaurant.name,
                       service: widget.service,
                       cartController: widget.cartController,
+                      addressController: widget.addressController,
+                      checkoutController: widget.checkoutController,
                     ),
                   ),
                 ),

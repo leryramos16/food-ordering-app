@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../auth/state/auth_controller.dart';
+import '../../orders/presentation/owner_orders_screen.dart';
+import '../../orders/state/owner_order_controller.dart';
 import '../../restaurants/domain/restaurant.dart';
 import '../state/owner_menu_controller.dart';
 import '../state/owner_restaurant_controller.dart';
@@ -14,11 +16,13 @@ class OwnerHomeScreen extends StatefulWidget {
     required this.authController,
     required this.restaurantController,
     required this.menuController,
+    required this.orderController,
   });
 
   final AuthController authController;
   final OwnerRestaurantController restaurantController;
   final OwnerMenuController menuController;
+  final OwnerOrderController orderController;
 
   @override
   State<OwnerHomeScreen> createState() => _OwnerHomeScreenState();
@@ -176,6 +180,19 @@ class _OwnerHomeScreenState extends State<OwnerHomeScreen> {
                           MaterialPageRoute(
                             builder: (_) =>
                                 OwnerMenuScreen(controller: widget.menuController),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _ActionTile(
+                        icon: Icons.receipt_long_outlined,
+                        label: 'Orders',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                OwnerOrdersScreen(controller: widget.orderController),
                           ),
                         ),
                       ),

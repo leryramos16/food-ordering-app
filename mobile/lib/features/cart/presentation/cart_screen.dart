@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 
+import '../../addresses/state/address_controller.dart';
+import '../../orders/presentation/checkout_screen.dart';
+import '../../orders/state/checkout_controller.dart';
 import '../state/cart_controller.dart';
 
 class CartScreen extends StatelessWidget {
-  const CartScreen({super.key, required this.controller});
+  const CartScreen({
+    super.key,
+    required this.controller,
+    required this.addressController,
+    required this.checkoutController,
+  });
 
   final CartController controller;
+  final AddressController addressController;
+  final CheckoutController checkoutController;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +80,11 @@ class CartScreen extends StatelessWidget {
                         },
                       ),
                     ),
-                    _CartSummary(controller: controller),
+                    _CartSummary(
+                      controller: controller,
+                      addressController: addressController,
+                      checkoutController: checkoutController,
+                    ),
                   ],
                 ),
         );
@@ -119,9 +133,15 @@ class _QuantityStepper extends StatelessWidget {
 }
 
 class _CartSummary extends StatelessWidget {
-  const _CartSummary({required this.controller});
+  const _CartSummary({
+    required this.controller,
+    required this.addressController,
+    required this.checkoutController,
+  });
 
   final CartController controller;
+  final AddressController addressController;
+  final CheckoutController checkoutController;
 
   @override
   Widget build(BuildContext context) {
@@ -150,8 +170,14 @@ class _CartSummary extends StatelessWidget {
             _summaryRow(context, 'Total', controller.total, emphasize: true),
             const SizedBox(height: 16),
             FilledButton(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Checkout is coming soon!')),
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => CheckoutScreen(
+                    cartController: controller,
+                    addressController: addressController,
+                    checkoutController: checkoutController,
+                  ),
+                ),
               ),
               child: const Text('Proceed to checkout'),
             ),

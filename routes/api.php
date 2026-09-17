@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\OwnerCategoryController;
 use App\Http\Controllers\Api\OwnerMenuItemController;
+use App\Http\Controllers\Api\OwnerOrderController;
 use App\Http\Controllers\Api\OwnerRestaurantController;
 use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\Api\OrderController;
@@ -66,4 +67,7 @@ Route::middleware(['auth:sanctum', 'role:restaurant_owner'])
             '/menu-items/{menuItem}/image',
             [OwnerMenuItemController::class, 'uploadImage'],
         );
+
+        Route::get('/orders', [OwnerOrderController::class, 'index']);
+        Route::get('/orders/{order}', [OwnerOrderController::class, 'show']);
     });

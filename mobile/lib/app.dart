@@ -15,6 +15,10 @@ import 'features/owner/data/owner_restaurant_service.dart';
 import 'features/owner/presentation/owner_home_screen.dart';
 import 'features/owner/state/owner_menu_controller.dart';
 import 'features/owner/state/owner_restaurant_controller.dart';
+import 'features/orders/data/order_service.dart';
+import 'features/orders/data/owner_order_service.dart';
+import 'features/orders/state/checkout_controller.dart';
+import 'features/orders/state/owner_order_controller.dart';
 import 'features/restaurants/data/restaurant_service.dart';
 import 'features/restaurants/state/restaurant_controller.dart';
 
@@ -36,6 +40,8 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
   late final OwnerRestaurantController ownerRestaurantController;
   late final OwnerMenuController ownerMenuController;
   late final CartController cartController;
+  late final CheckoutController checkoutController;
+  late final OwnerOrderController ownerOrderController;
 
   @override
   void initState() {
@@ -60,6 +66,10 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
     ownerMenuController = OwnerMenuController(OwnerMenuService(apiClient));
 
     cartController = CartController();
+
+    checkoutController = CheckoutController(OrderService(apiClient));
+
+    ownerOrderController = OwnerOrderController(OwnerOrderService(apiClient));
   }
 
   @override
@@ -70,6 +80,8 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
     ownerRestaurantController.dispose();
     ownerMenuController.dispose();
     cartController.dispose();
+    checkoutController.dispose();
+    ownerOrderController.dispose();
     super.dispose();
   }
 
@@ -97,6 +109,7 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
                   authController: authController,
                   restaurantController: ownerRestaurantController,
                   menuController: ownerMenuController,
+                  orderController: ownerOrderController,
                 )
               : HomeScreen(
                   authController: authController,
@@ -104,6 +117,7 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
                   restaurantService: restaurantService,
                   addressController: addressController,
                   cartController: cartController,
+                  checkoutController: checkoutController,
                 );
         },
       ),

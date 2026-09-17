@@ -1,0 +1,106 @@
+import 'package:flutter/foundation.dart';
+
+import '../../restaurants/domain/menu_item.dart';
+import '../domain/cart_item.dart';
+
+class CartController extends ChangeNotifier {
+  final List<CartItem> _items = [];
+
+  int? restaurantId;
+  String? restaurantName;
+  double deliveryFee = 0;
+
+  List<CartItem> get items => List.unmodifiable(_items);
+
+  bool get isEmpty => _items.isEmpty;
+
+  int get totalItems => _items.fold(0, (sum, item) => sum + item.quantity);
+
+  double get subtotal => _items.fold(0, (sum, item) => sum + item.lineTotal);
+
+  double get total => subtotal + (isEmpty ? 0 : deliveryFee);
+
+  /// A cart can only hold items from one restaurant at a time. This tells
+  /// the UI whether adding from [otherRestaurantId] would conflict with
+  /// what's already in the cart, so it can ask the user first.
+  bool belongsToDifferentRestaurant(int otherRestaurantId) {
+    return restaurantId != null && restaurantId != otherRestaurantId;
+  }
+
+  void addItem(
+    MenuItem menuItem, {
+    required int restaurantId,
+    required String restaurantName,
+    required double deliveryFee,
+  }) {
+    this.restaurantId = restaurantId;
+    this.restaurantName = restaurantName;
+    this.deliveryFee = deliveryFee;
+
+    final index = _items.indexWhere(
+      (cartItem) => cartItem.menuItem.id == menuItem.id,
+    );
+
+    if (index == -1) {
+      _items.add(CartItem(menuItem: menuItem, quantity: 1));
+    } else {
+      _items[index] = _items[index].copyWith(
+        quantity: _items[index].quantity + 1,
+      );
+    }
+
+    notifyListeners();
+  }
+
+  void incrementQuantity(int menuItemId) {
+    final index = _items.indexWhere(
+      (cartItem) => cartItem.menuItem.id == menuItemId,
+    );
+    if (index == -1) return;
+
+    _items[index] = _items[index].copyWith(
+      quantity: _items[index].quantity + 1,
+    );
+    notifyListeners();
+  }
+
+  void decrementQuantity(int menuItemId) {
+    final index = _items.indexWhere(
+      (cartItem) => cartItem.menuItem.id == menuItemId,
+    );
+    if (index == -1) return;
+
+    final newQuantity = _items[index].quantity - 1;
+
+    if (newQuantity <= 0) {
+      _items.removeAt(index);
+    } else {
+      _items[index] = _items[index].copyWith(quantity: newQuantity);
+    }
+
+    _clearIfEmpty();
+    notifyListeners();
+  }
+
+  void removeItem(int menuItemId) {
+    _items.removeWhere((cartItem) => cartItem.menuItem.id == menuItemId);
+    _clearIfEmpty();
+    notifyListeners();
+  }
+
+  void clear() {
+    _items.clear();
+    restaurantId = null;
+    restaurantName = null;
+    deliveryFee = 0;
+    notifyListeners();
+  }
+
+  void _clearIfEmpty() {
+    if (_items.isEmpty) {
+      restaurantId = null;
+      restaurantName = null;
+      deliveryFee = 0;
+    }
+  }
+}

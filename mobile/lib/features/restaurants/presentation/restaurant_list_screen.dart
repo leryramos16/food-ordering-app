@@ -4,16 +4,19 @@ import '../data/restaurant_service.dart';
 import '../domain/restaurant.dart';
 import '../state/restaurant_controller.dart';
 import 'restaurant_detail_screen.dart';
+import '../../cart/state/cart_controller.dart';
 
 class RestaurantListScreen extends StatefulWidget {
   const RestaurantListScreen({
     super.key,
     required this.controller,
     required this.service,
+    required this.cartController,
   });
 
   final RestaurantController controller;
   final RestaurantService service;
+  final CartController cartController;
 
   @override
   State<RestaurantListScreen> createState() => _RestaurantListScreenState();
@@ -80,6 +83,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                       restaurantId: restaurant.id,
                       restaurantName: restaurant.name,
                       service: widget.service,
+                      cartController: widget.cartController,
                     ),
                   ),
                 ),
@@ -174,9 +178,8 @@ class _RestaurantCard extends StatelessWidget {
                           restaurant.address,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: colorScheme.onSurfaceVariant),
                         ),
                       ),
                     ],
@@ -191,7 +194,8 @@ class _RestaurantCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       _InfoPill(
                         icon: Icons.shopping_bag_outlined,
-                        label: 'Min ₱${restaurant.minimumOrder.toStringAsFixed(2)}',
+                        label:
+                            'Min ₱${restaurant.minimumOrder.toStringAsFixed(2)}',
                       ),
                     ],
                   ),

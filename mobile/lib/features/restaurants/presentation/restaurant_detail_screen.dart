@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../cart/presentation/cart_icon_button.dart';
+import '../../cart/presentation/cart_screen.dart';
+import '../../cart/state/cart_controller.dart';
 import '../data/restaurant_service.dart';
 import '../domain/category.dart';
 import '../domain/menu_item.dart';
@@ -12,15 +15,16 @@ class RestaurantDetailScreen extends StatefulWidget {
     required this.restaurantId,
     required this.restaurantName,
     required this.service,
+    required this.cartController,
   });
 
   final int restaurantId;
   final String restaurantName;
   final RestaurantService service;
+  final CartController cartController;
 
   @override
-  State<RestaurantDetailScreen> createState() =>
-      _RestaurantDetailScreenState();
+  State<RestaurantDetailScreen> createState() => _RestaurantDetailScreenState();
 }
 
 class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
@@ -65,10 +69,14 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                     children: [
                       const Icon(Icons.error_outline, size: 48),
                       const SizedBox(height: 12),
-                      Text(_controller.errorMessage!, textAlign: TextAlign.center),
+                      Text(
+                        _controller.errorMessage!,
+                        textAlign: TextAlign.center,
+                      ),
                       const SizedBox(height: 16),
                       FilledButton(
-                        onPressed: () => _controller.loadMenu(widget.restaurantId),
+                        onPressed: () =>
+                            _controller.loadMenu(widget.restaurantId),
                         child: const Text('Try Again'),
                       ),
                     ],
@@ -97,6 +105,9 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                   SliverAppBar(
                     pinned: true,
                     expandedHeight: 200,
+                    actions: [
+                      CartIconButton(controller: widget.cartController),
+                    ],
                     flexibleSpace: FlexibleSpaceBar(
                       background: _RestaurantBanner(restaurant: restaurant),
                     ),
@@ -111,7 +122,8 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                         isScrollable: true,
                         tabAlignment: TabAlignment.start,
                         tabs: [
-                          for (final category in categories) Tab(text: category.name),
+                          for (final category in categories)
+                            Tab(text: category.name),
                         ],
                       ),
                     ),
@@ -120,13 +132,77 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                 body: TabBarView(
                   children: [
                     for (final category in categories)
-                      _CategoryMenuGrid(category: category),
+                      _CategoryMenuGrid(
+                        category: category,
+                        restaurant: restaurant,
+                        cartController: widget.cartController,
+                      ),
                   ],
                 ),
               ),
             ),
           );
         },
+      ),
+      bottomNavigationBar: AnimatedBuilder(
+        animation: widget.cartController,
+        builder: (context, _) {
+          if (widget.cartController.isEmpty) return const SizedBox.shrink();
+          return _ViewCartBar(cartController: widget.cartController);
+        },
+      ),
+    );
+  }
+}
+
+class _ViewCartBar extends StatelessWidget {
+  const _ViewCartBar({required this.cartController});
+
+  final CartController cartController;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+        child: Material(
+          color: colorScheme.primary,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => CartScreen(controller: cartController),
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Row(
+                children: [
+                  Icon(Icons.shopping_cart, color: colorScheme.onPrimary),
+                  const SizedBox(width: 10),
+                  Text(
+                    '${cartController.totalItems} item${cartController.totalItems == 1 ? '' : 's'}',
+                    style: TextStyle(
+                      color: colorScheme.onPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'View cart  •  ₱${cartController.subtotal.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      color: colorScheme.onPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -158,7 +234,10 @@ class _RestaurantBanner extends StatelessWidget {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Colors.black.withValues(alpha: 0.05), Colors.black.withValues(alpha: 0.65)],
+              colors: [
+                Colors.black.withValues(alpha: 0.05),
+                Colors.black.withValues(alpha: 0.65),
+              ],
             ),
           ),
         ),
@@ -180,7 +259,10 @@ class _RestaurantBanner extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: restaurant.isOpen
                       ? Colors.green.shade600
@@ -244,7 +326,11 @@ class _RestaurantInfoBar extends StatelessWidget {
           ],
           Row(
             children: [
-              Icon(Icons.location_on_outlined, size: 16, color: colorScheme.onSurfaceVariant),
+              Icon(
+                Icons.location_on_outlined,
+                size: 16,
+                color: colorScheme.onSurfaceVariant,
+              ),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
@@ -319,7 +405,11 @@ class _CategoryTabBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => tabBar.preferredSize.height;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return ColoredBox(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: tabBar,
@@ -333,9 +423,15 @@ class _CategoryTabBarDelegate extends SliverPersistentHeaderDelegate {
 }
 
 class _CategoryMenuGrid extends StatelessWidget {
-  const _CategoryMenuGrid({required this.category});
+  const _CategoryMenuGrid({
+    required this.category,
+    required this.restaurant,
+    required this.cartController,
+  });
 
   final Category category;
+  final Restaurant restaurant;
+  final CartController cartController;
 
   @override
   Widget build(BuildContext context) {
@@ -352,15 +448,25 @@ class _CategoryMenuGrid extends StatelessWidget {
         crossAxisSpacing: 14,
         childAspectRatio: 0.72,
       ),
-      itemBuilder: (context, index) => _MenuItemTile(item: category.items[index]),
+      itemBuilder: (context, index) => _MenuItemTile(
+        item: category.items[index],
+        restaurant: restaurant,
+        cartController: cartController,
+      ),
     );
   }
 }
 
 class _MenuItemTile extends StatelessWidget {
-  const _MenuItemTile({required this.item});
+  const _MenuItemTile({
+    required this.item,
+    required this.restaurant,
+    required this.cartController,
+  });
 
   final MenuItem item;
+  final Restaurant restaurant;
+  final CartController cartController;
 
   @override
   Widget build(BuildContext context) {
@@ -381,14 +487,22 @@ class _MenuItemTile extends StatelessWidget {
                   Positioned(
                     right: 8,
                     bottom: 8,
-                    child: _AddButton(enabled: item.isAvailable, item: item),
+                    child: _AddButton(
+                      enabled: item.isAvailable,
+                      item: item,
+                      restaurant: restaurant,
+                      cartController: cartController,
+                    ),
                   ),
                   if (!item.isAvailable)
                     Positioned(
                       left: 8,
                       top: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.65),
                           borderRadius: BorderRadius.circular(12),
@@ -411,7 +525,10 @@ class _MenuItemTile extends StatelessWidget {
                     item.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
                   ),
                   const SizedBox(height: 3),
                   Text(
@@ -461,35 +578,83 @@ class _MenuItemTile extends StatelessWidget {
 }
 
 class _AddButton extends StatelessWidget {
-  const _AddButton({required this.enabled, required this.item});
+  const _AddButton({
+    required this.enabled,
+    required this.item,
+    required this.restaurant,
+    required this.cartController,
+  });
 
   final bool enabled;
   final MenuItem item;
+  final Restaurant restaurant;
+  final CartController cartController;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Material(
-      color: enabled ? colorScheme.primary : colorScheme.surfaceContainerHighest,
+      color: enabled
+          ? colorScheme.primary
+          : colorScheme.surfaceContainerHighest,
       shape: const CircleBorder(),
       elevation: 2,
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: enabled
-            ? () => ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Cart is coming soon — ${item.name} noted!')),
-              )
-            : null,
+        onTap: enabled ? () => _handleTap(context) : null,
         child: Padding(
           padding: const EdgeInsets.all(6),
           child: Icon(
             Icons.add,
             size: 18,
-            color: enabled ? colorScheme.onPrimary : colorScheme.onSurfaceVariant,
+            color: enabled
+                ? colorScheme.onPrimary
+                : colorScheme.onSurfaceVariant,
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _handleTap(BuildContext context) async {
+    if (cartController.belongsToDifferentRestaurant(restaurant.id)) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Start a new cart?'),
+          content: Text(
+            'Your cart has items from ${cartController.restaurantName}. '
+            'Adding from ${restaurant.name} will clear it.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Start new cart'),
+            ),
+          ],
+        ),
+      );
+
+      if (confirmed != true) return;
+      cartController.clear();
+    }
+
+    cartController.addItem(
+      item,
+      restaurantId: restaurant.id,
+      restaurantName: restaurant.name,
+      deliveryFee: restaurant.deliveryFee,
+    );
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('${item.name} added to cart')));
+    }
   }
 }

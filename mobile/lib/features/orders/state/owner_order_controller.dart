@@ -13,6 +13,10 @@ class OwnerOrderController extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
+  /// Order ids currently being updated, so a card can show a small spinner
+  /// on just its own action instead of blocking the whole list.
+  final Set<int> submittingOrderIds = {};
+
   Future<void> loadOrders() async {
     if (isLoading) return;
 
@@ -27,6 +31,35 @@ class OwnerOrderController extends ChangeNotifier {
       errorMessage = error.toString();
     } finally {
       isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> updateStatus(int orderId, String status) {
+    return _mutate(orderId, () => _service.updateStatus(orderId, status));
+  }
+
+  Future<bool> markPaid(int orderId) {
+    return _mutate(orderId, () => _service.markPaid(orderId));
+  }
+
+  Future<bool> _mutate(int orderId, Future<Order> Function() action) async {
+    submittingOrderIds.add(orderId);
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      final updated = await action();
+
+      final index = orders.indexWhere((order) => order.id == orderId);
+      if (index != -1) orders[index] = updated;
+
+      return true;
+    } catch (error) {
+      errorMessage = error.toString();
+      return false;
+    } finally {
+      submittingOrderIds.remove(orderId);
       notifyListeners();
     }
   }

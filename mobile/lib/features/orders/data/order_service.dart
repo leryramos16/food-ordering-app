@@ -41,4 +41,14 @@ class OrderService {
     final data = Map<String, dynamic>.from(response['data'] as Map);
     return Order.fromJson(data);
   }
+
+  Future<List<Order>> getOrders() async {
+    final response = await _api.get('/orders', authenticated: true);
+
+    final data = response['data'] as List<dynamic>;
+
+    return data
+        .map((item) => Order.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+  }
 }

@@ -19,6 +19,7 @@ import 'features/orders/data/order_service.dart';
 import 'features/orders/data/owner_order_service.dart';
 import 'features/orders/data/payment_service.dart';
 import 'features/orders/state/checkout_controller.dart';
+import 'features/orders/state/my_orders_controller.dart';
 import 'features/orders/state/owner_order_controller.dart';
 import 'features/restaurants/data/restaurant_service.dart';
 import 'features/restaurants/state/restaurant_controller.dart';
@@ -41,7 +42,9 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
   late final OwnerRestaurantController ownerRestaurantController;
   late final OwnerMenuController ownerMenuController;
   late final CartController cartController;
+  late final OrderService orderService;
   late final CheckoutController checkoutController;
+  late final MyOrdersController myOrdersController;
   late final OwnerOrderController ownerOrderController;
 
   @override
@@ -68,10 +71,11 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
 
     cartController = CartController();
 
-    checkoutController = CheckoutController(
-      OrderService(apiClient),
-      PaymentService(apiClient),
-    );
+    orderService = OrderService(apiClient);
+
+    checkoutController = CheckoutController(orderService, PaymentService(apiClient));
+
+    myOrdersController = MyOrdersController(orderService);
 
     ownerOrderController = OwnerOrderController(OwnerOrderService(apiClient));
   }
@@ -85,6 +89,7 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
     ownerMenuController.dispose();
     cartController.dispose();
     checkoutController.dispose();
+    myOrdersController.dispose();
     ownerOrderController.dispose();
     super.dispose();
   }
@@ -122,6 +127,7 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
                   addressController: addressController,
                   cartController: cartController,
                   checkoutController: checkoutController,
+                  myOrdersController: myOrdersController,
                 );
         },
       ),

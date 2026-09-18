@@ -5,7 +5,9 @@ import '../../addresses/state/address_controller.dart';
 import '../../auth/state/auth_controller.dart';
 import '../../cart/presentation/cart_icon_button.dart';
 import '../../cart/state/cart_controller.dart';
+import '../../orders/presentation/my_orders_screen.dart';
 import '../../orders/state/checkout_controller.dart';
+import '../../orders/state/my_orders_controller.dart';
 import '../../restaurants/data/restaurant_service.dart';
 import '../../restaurants/presentation/restaurant_list_screen.dart';
 import '../../restaurants/state/restaurant_controller.dart';
@@ -19,6 +21,7 @@ class HomeScreen extends StatelessWidget {
     required this.addressController,
     required this.cartController,
     required this.checkoutController,
+    required this.myOrdersController,
   });
 
   final AuthController authController;
@@ -27,6 +30,7 @@ class HomeScreen extends StatelessWidget {
   final AddressController addressController;
   final CartController cartController;
   final CheckoutController checkoutController;
+  final MyOrdersController myOrdersController;
 
   @override
   Widget build(BuildContext context) {
@@ -54,6 +58,15 @@ class HomeScreen extends StatelessWidget {
             controller: cartController,
             addressController: addressController,
             checkoutController: checkoutController,
+          ),
+          IconButton(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => MyOrdersScreen(controller: myOrdersController),
+              ),
+            ),
+            icon: const Icon(Icons.receipt_long_outlined),
+            tooltip: 'My orders',
           ),
           IconButton(
             onPressed: () => Navigator.of(context).push(

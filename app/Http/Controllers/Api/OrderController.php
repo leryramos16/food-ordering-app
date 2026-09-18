@@ -9,9 +9,22 @@ use App\Models\Order;
 use App\Services\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class OrderController extends Controller
 {
+    public function index(Request $request): AnonymousResourceCollection
+    {
+        $orders = $request->user()
+            ->orders()
+            ->with(['items', 'restaurant:id,name'])
+            ->latest('placed_at')
+            ->paginate(20);
+
+        return OrderResource::collection($orders)
+            ->additional(['success' => true]);
+    }
+
     public function store(
         StoreOrderRequest $request,
         OrderService $orderService

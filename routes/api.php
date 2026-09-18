@@ -44,6 +44,7 @@ Route::any('/payments/dragonpay/postback', [PaymentController::class, 'postback'
 Route::get('/payments/dragonpay/return', [PaymentController::class, 'returnUrl']);
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/orders', [OrderController::class, 'index']);
     Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{order}', [OrderController::class, 'show']);
     Route::post('/orders/{order}/payment', [PaymentController::class, 'initiate']);
@@ -80,4 +81,6 @@ Route::middleware(['auth:sanctum', 'role:restaurant_owner'])
 
         Route::get('/orders', [OwnerOrderController::class, 'index']);
         Route::get('/orders/{order}', [OwnerOrderController::class, 'show']);
+        Route::patch('/orders/{order}/status', [OwnerOrderController::class, 'updateStatus']);
+        Route::patch('/orders/{order}/mark-paid', [OwnerOrderController::class, 'markPaid']);
     });

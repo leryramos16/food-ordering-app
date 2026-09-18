@@ -33,6 +33,14 @@ class ApiClient {
     return _request('PUT', path, body: body, authenticated: authenticated);
   }
 
+  Future<Map<String, dynamic>> patch(
+    String path, {
+    Map<String, dynamic>? body,
+    bool authenticated = false,
+  }) {
+    return _request('PATCH', path, body: body, authenticated: authenticated);
+  }
+
   Future<Map<String, dynamic>> delete(String path, {bool authenticated = false}) {
     return _request('DELETE', path, authenticated: authenticated);
   }
@@ -95,6 +103,11 @@ class ApiClient {
       'GET' => await _client.get(uri, headers: headers),
       'DELETE' => await _client.delete(uri, headers: headers),
       'PUT' => await _client.put(
+        uri,
+        headers: headers,
+        body: jsonEncode(body ?? {}),
+      ),
+      'PATCH' => await _client.patch(
         uri,
         headers: headers,
         body: jsonEncode(body ?? {}),

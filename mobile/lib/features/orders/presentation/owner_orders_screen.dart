@@ -66,6 +66,7 @@ class _OwnerOrdersScreenState extends State<OwnerOrdersScreen> {
               separatorBuilder: (_, _) => const SizedBox(height: 12),
               itemBuilder: (context, index) => _OrderCard(
                 order: controller.orders[index],
+                controller: controller,
               ),
             ),
           );
@@ -76,9 +77,28 @@ class _OwnerOrdersScreenState extends State<OwnerOrdersScreen> {
 }
 
 class _OrderCard extends StatelessWidget {
-  const _OrderCard({required this.order});
+  const _OrderCard({required this.order, required this.controller});
 
   final Order order;
+  final OwnerOrderController controller;
+
+  /// Mirrors the backend's allowed status transitions (see
+  /// OwnerOrderController::STATUS_TRANSITIONS) so the buttons shown here
+  /// only ever offer moves the server will actually accept.
+  static const Map<String, List<(String label, String target, bool destructive)>>
+  _nextActions = {
+    'pending': [
+      ('Start preparing', 'preparing', false),
+      ('Cancel order', 'cancelled', true),
+    ],
+    'preparing': [
+      ('Mark ready', 'ready', false),
+      ('Cancel order', 'cancelled', true),
+    ],
+    'ready': [('Mark delivered', 'delivered', false)],
+    'delivered': [],
+    'cancelled': [],
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +114,7 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    order.orderNumber,
+                    'Order #${order.id}',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -102,6 +122,12 @@ class _OrderCard extends StatelessWidget {
                 ),
                 _StatusChip(status: order.status),
               ],
+            ),
+            Text(
+              order.orderNumber,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 6),
             Text(
@@ -156,10 +182,85 @@ class _OrderCard extends StatelessWidget {
                 ),
               ),
             ],
+            if (_hasActions) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  if (_canMarkPaid)
+                    FilledButton.tonalIcon(
+                      onPressed: _isSubmitting
+                          ? null
+                          : () => _markPaid(context),
+                      icon: const Icon(Icons.payments_outlined, size: 16),
+                      label: const Text('Mark paid'),
+                    ),
+                  for (final (label, target, destructive) in _actionsForStatus)
+                    destructive
+                        ? OutlinedButton(
+                            onPressed: _isSubmitting
+                                ? null
+                                : () => _updateStatus(context, target),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Theme.of(context).colorScheme.error,
+                              side: BorderSide(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                            child: Text(label),
+                          )
+                        : FilledButton(
+                            onPressed: _isSubmitting
+                                ? null
+                                : () => _updateStatus(context, target),
+                            child: Text(label),
+                          ),
+                  if (_isSubmitting)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 4),
+                      child: SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
     );
+  }
+
+  List<(String, String, bool)> get _actionsForStatus =>
+      _nextActions[order.status] ?? const [];
+
+  bool get _canMarkPaid =>
+      order.paymentMethod == 'cash_on_delivery' && order.paymentStatus == 'unpaid';
+
+  bool get _hasActions => _actionsForStatus.isNotEmpty || _canMarkPaid;
+
+  bool get _isSubmitting => controller.submittingOrderIds.contains(order.id);
+
+  Future<void> _updateStatus(BuildContext context, String target) async {
+    final success = await controller.updateStatus(order.id, target);
+
+    if (!success && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(controller.errorMessage ?? 'Something went wrong.')),
+      );
+    }
+  }
+
+  Future<void> _markPaid(BuildContext context) async {
+    final success = await controller.markPaid(order.id);
+
+    if (!success && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(controller.errorMessage ?? 'Something went wrong.')),
+      );
+    }
   }
 }
 
@@ -173,7 +274,7 @@ class _StatusChip extends StatelessWidget {
     final color = switch (status) {
       'pending' => Colors.orange,
       'preparing' => Colors.blue,
-      'ready' || 'completed' => Colors.green,
+      'ready' || 'delivered' => Colors.green,
       'cancelled' => Colors.red,
       _ => Colors.grey,
     };

@@ -1,16 +1,15 @@
 import 'package:flutter/material.dart';
 
-import '../../addresses/presentation/address_list_screen.dart';
 import '../../addresses/state/address_controller.dart';
 import '../../auth/state/auth_controller.dart';
 import '../../cart/presentation/cart_icon_button.dart';
 import '../../cart/state/cart_controller.dart';
-import '../../orders/presentation/my_orders_screen.dart';
 import '../../orders/state/checkout_controller.dart';
 import '../../orders/state/my_orders_controller.dart';
 import '../../restaurants/data/restaurant_service.dart';
 import '../../restaurants/presentation/restaurant_list_screen.dart';
 import '../../restaurants/state/restaurant_controller.dart';
+import 'app_drawer.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({
@@ -37,6 +36,11 @@ class HomeScreen extends StatelessWidget {
     final firstName = authController.user?.name.split(' ').first ?? '';
 
     return Scaffold(
+      drawer: AppDrawer(
+        authController: authController,
+        addressController: addressController,
+        myOrdersController: myOrdersController,
+      ),
       appBar: AppBar(
         toolbarHeight: 68,
         title: Column(
@@ -59,32 +63,7 @@ class HomeScreen extends StatelessWidget {
             addressController: addressController,
             checkoutController: checkoutController,
           ),
-          IconButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => MyOrdersScreen(controller: myOrdersController),
-              ),
-            ),
-            icon: const Icon(Icons.receipt_long_outlined),
-            tooltip: 'My orders',
-          ),
-          IconButton(
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    AddressListScreen(controller: addressController),
-              ),
-            ),
-            icon: const Icon(Icons.location_on_outlined),
-            tooltip: 'My addresses',
-          ),
-          IconButton(
-            onPressed: authController.isSubmitting
-                ? null
-                : authController.logout,
-            icon: const Icon(Icons.logout),
-            tooltip: 'Log out',
-          ),
+          const SizedBox(width: 4),
         ],
       ),
       body: RestaurantListScreen(

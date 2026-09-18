@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/order.dart';
 import '../state/my_orders_controller.dart';
+import 'status_chip.dart';
 
 class MyOrdersScreen extends StatefulWidget {
   const MyOrdersScreen({super.key, required this.controller});
@@ -100,7 +101,7 @@ class _OrderCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                _StatusChip(status: order.status),
+                StatusChip(status: order.status),
               ],
             ),
             const SizedBox(height: 2),
@@ -174,39 +175,6 @@ class _OrderCard extends StatelessWidget {
     final minute = local.minute.toString().padLeft(2, '0');
 
     return '${_months[local.month - 1]} ${local.day}, $hour12:$minute $period';
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = switch (status) {
-      'pending' => Colors.orange,
-      'preparing' => Colors.blue,
-      'ready' || 'delivered' || 'completed' => Colors.green,
-      'cancelled' => Colors.red,
-      _ => Colors.grey,
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status[0].toUpperCase() + status.substring(1),
-        style: TextStyle(
-          color: color.shade700,
-          fontWeight: FontWeight.w700,
-          fontSize: 11,
-        ),
-      ),
-    );
   }
 }
 

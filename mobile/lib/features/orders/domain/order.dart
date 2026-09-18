@@ -9,7 +9,10 @@ class Order {
     required this.recipientName,
     required this.recipientPhone,
     required this.addressLine,
+    required this.barangay,
     required this.city,
+    required this.province,
+    required this.postalCode,
     required this.subtotal,
     required this.deliveryFee,
     required this.totalAmount,
@@ -27,7 +30,10 @@ class Order {
   final String recipientName;
   final String recipientPhone;
   final String addressLine;
+  final String? barangay;
   final String city;
+  final String? province;
+  final String? postalCode;
   final double subtotal;
   final double deliveryFee;
   final double totalAmount;
@@ -36,6 +42,18 @@ class Order {
   final String? notes;
   final DateTime? placedAt;
   final List<OrderItem> items;
+
+  /// The delivery address, fully assembled from whichever parts are
+  /// present — barangay and postal code are optional on an address.
+  String get fullAddress {
+    final parts = [addressLine, barangay, city, province]
+        .where((part) => part != null && part.isNotEmpty)
+        .join(', ');
+
+    return postalCode == null || postalCode!.isEmpty
+        ? parts
+        : '$parts $postalCode';
+  }
 
   factory Order.fromJson(Map<String, dynamic> json) {
     final deliveryAddress = Map<String, dynamic>.from(
@@ -52,7 +70,10 @@ class Order {
       recipientName: deliveryAddress['recipient_name'] as String,
       recipientPhone: deliveryAddress['phone'] as String,
       addressLine: deliveryAddress['address_line'] as String,
+      barangay: deliveryAddress['barangay'] as String?,
       city: deliveryAddress['city'] as String,
+      province: deliveryAddress['province'] as String?,
+      postalCode: deliveryAddress['postal_code'] as String?,
       subtotal: double.parse(json['subtotal'].toString()),
       deliveryFee: double.parse(json['delivery_fee'].toString()),
       totalAmount: double.parse(json['total_amount'].toString()),

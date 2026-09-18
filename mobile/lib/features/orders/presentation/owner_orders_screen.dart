@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../domain/order.dart';
 import '../state/owner_order_controller.dart';
+import 'owner_order_detail_screen.dart';
+import 'status_chip.dart';
 
 class OwnerOrdersScreen extends StatefulWidget {
   const OwnerOrdersScreen({super.key, required this.controller});
@@ -85,7 +87,10 @@ class _OrderCard extends StatelessWidget {
   /// Mirrors the backend's allowed status transitions (see
   /// OwnerOrderController::STATUS_TRANSITIONS) so the buttons shown here
   /// only ever offer moves the server will actually accept.
-  static const Map<String, List<(String label, String target, bool destructive)>>
+  static const Map<
+    String,
+    List<(String label, String target, bool destructive)>
+  >
   _nextActions = {
     'pending': [
       ('Start preparing', 'preparing', false),
@@ -105,129 +110,152 @@ class _OrderCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Order #${order.id}',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) =>
+                OwnerOrderDetailScreen(order: order, controller: controller),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      'Order #${order.id}',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-                _StatusChip(status: order.status),
-              ],
-            ),
-            Text(
-              order.orderNumber,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+                  StatusChip(status: order.status),
+                ],
               ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '${order.recipientName} • ${order.recipientPhone}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            Text(
-              '${order.addressLine}, ${order.city}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const Divider(height: 20),
-            for (final item in order.items)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  children: [
-                    Text('${item.quantity}x '),
-                    Expanded(child: Text(item.name)),
-                    Text('₱${item.lineTotal.toStringAsFixed(2)}'),
-                  ],
-                ),
-              ),
-            const Divider(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  order.paymentMethod == 'cash_on_delivery'
-                      ? 'Cash on delivery'
-                      : order.paymentMethod,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                Text(
-                  '₱${order.totalAmount.toStringAsFixed(2)}',
-                  style: const TextStyle(fontWeight: FontWeight.w800),
-                ),
-              ],
-            ),
-            if (order.notes != null && order.notes!.isNotEmpty) ...[
-              const SizedBox(height: 6),
               Text(
-                'Note: ${order.notes}',
+                order.orderNumber,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontStyle: FontStyle.italic,
                   color: colorScheme.onSurfaceVariant,
                 ),
               ),
-            ],
-            if (_hasActions) ...[
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              const SizedBox(height: 6),
+              Row(
                 children: [
-                  if (_canMarkPaid)
-                    FilledButton.tonalIcon(
-                      onPressed: _isSubmitting
-                          ? null
-                          : () => _markPaid(context),
-                      icon: const Icon(Icons.payments_outlined, size: 16),
-                      label: const Text('Mark paid'),
-                    ),
-                  for (final (label, target, destructive) in _actionsForStatus)
-                    destructive
-                        ? OutlinedButton(
-                            onPressed: _isSubmitting
-                                ? null
-                                : () => _updateStatus(context, target),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Theme.of(context).colorScheme.error,
-                              side: BorderSide(
-                                color: Theme.of(context).colorScheme.error,
-                              ),
-                            ),
-                            child: Text(label),
-                          )
-                        : FilledButton(
-                            onPressed: _isSubmitting
-                                ? null
-                                : () => _updateStatus(context, target),
-                            child: Text(label),
-                          ),
-                  if (_isSubmitting)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 4),
-                      child: SizedBox.square(
-                        dimension: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
+                  Icon(
+                    Icons.person_outline,
+                    size: 15,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      order.recipientName,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
                 ],
               ),
+              const Divider(height: 20),
+              for (final item in order.items)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    children: [
+                      Text('${item.quantity}x '),
+                      Expanded(child: Text(item.name)),
+                      Text('₱${item.lineTotal.toStringAsFixed(2)}'),
+                    ],
+                  ),
+                ),
+              const Divider(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    order.paymentMethod == 'cash_on_delivery'
+                        ? 'Cash on delivery'
+                        : order.paymentMethod,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  Text(
+                    '₱${order.totalAmount.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+              if (order.notes != null && order.notes!.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  'Note: ${order.notes}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+              if (_hasActions) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (_canMarkPaid)
+                      FilledButton.tonalIcon(
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => _markPaid(context),
+                        icon: const Icon(Icons.payments_outlined, size: 16),
+                        label: const Text('Mark paid'),
+                      ),
+                    for (final (label, target, destructive)
+                        in _actionsForStatus)
+                      destructive
+                          ? OutlinedButton(
+                              onPressed: _isSubmitting
+                                  ? null
+                                  : () => _updateStatus(context, target),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Theme.of(
+                                  context,
+                                ).colorScheme.error,
+                                side: BorderSide(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                              child: Text(label),
+                            )
+                          : FilledButton(
+                              onPressed: _isSubmitting
+                                  ? null
+                                  : () => _updateStatus(context, target),
+                              child: Text(label),
+                            ),
+                    if (_isSubmitting)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 4),
+                        child: SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -237,7 +265,8 @@ class _OrderCard extends StatelessWidget {
       _nextActions[order.status] ?? const [];
 
   bool get _canMarkPaid =>
-      order.paymentMethod == 'cash_on_delivery' && order.paymentStatus == 'unpaid';
+      order.paymentMethod == 'cash_on_delivery' &&
+      order.paymentStatus == 'unpaid';
 
   bool get _hasActions => _actionsForStatus.isNotEmpty || _canMarkPaid;
 
@@ -248,7 +277,9 @@ class _OrderCard extends StatelessWidget {
 
     if (!success && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(controller.errorMessage ?? 'Something went wrong.')),
+        SnackBar(
+          content: Text(controller.errorMessage ?? 'Something went wrong.'),
+        ),
       );
     }
   }
@@ -258,41 +289,10 @@ class _OrderCard extends StatelessWidget {
 
     if (!success && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(controller.errorMessage ?? 'Something went wrong.')),
+        SnackBar(
+          content: Text(controller.errorMessage ?? 'Something went wrong.'),
+        ),
       );
     }
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({required this.status});
-
-  final String status;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = switch (status) {
-      'pending' => Colors.orange,
-      'preparing' => Colors.blue,
-      'ready' || 'delivered' => Colors.green,
-      'cancelled' => Colors.red,
-      _ => Colors.grey,
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        status[0].toUpperCase() + status.substring(1),
-        style: TextStyle(
-          color: color.shade700,
-          fontWeight: FontWeight.w700,
-          fontSize: 11,
-        ),
-      ),
-    );
   }
 }

@@ -21,6 +21,18 @@ class OrderResource extends JsonResource
 
             'status' => $this->status,
 
+            'is_preorder' => $this->is_preorder,
+
+            'requested_date' => $this->requested_date?->toDateString(),
+
+            'requested_time' => $this->requested_time,
+
+            'fulfillment_type' => $this->fulfillment_type,
+
+            'contact_name' => $this->contact_name,
+
+            'contact_phone' => $this->contact_phone,
+
             'restaurant' => $this->whenLoaded(
                 'restaurant',
                 function () {

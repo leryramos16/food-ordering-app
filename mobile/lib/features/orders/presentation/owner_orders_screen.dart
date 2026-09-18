@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../domain/order.dart';
 import '../state/owner_order_controller.dart';
 import 'owner_order_detail_screen.dart';
+import 'preorder_badge.dart';
 import 'status_chip.dart';
 
 class OwnerOrdersScreen extends StatefulWidget {
@@ -166,6 +167,14 @@ class _OrderCard extends StatelessWidget {
                   ),
                 ],
               ),
+              if (order.isPreorder && order.requestedDate != null) ...[
+                const SizedBox(height: 8),
+                PreorderBadge(
+                  date: order.requestedDate!,
+                  time: order.requestedTime,
+                  fulfillmentType: order.fulfillmentType,
+                ),
+              ],
               const Divider(height: 20),
               for (final item in order.items)
                 Padding(

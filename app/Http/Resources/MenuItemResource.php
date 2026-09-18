@@ -29,6 +29,10 @@ class MenuItemResource extends JsonResource
 
             'preparation_time_minutes' =>
                 $this->preparation_time_minutes,
+
+            'is_preorder' => $this->is_preorder,
+
+            'preorder_lead_days' => $this->preorder_lead_days,
         ];
     }
 }

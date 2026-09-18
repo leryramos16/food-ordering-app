@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../addresses/state/address_controller.dart';
+import '../../auth/domain/app_user.dart';
 import '../../cart/presentation/cart_icon_button.dart';
 import '../../cart/presentation/cart_screen.dart';
 import '../../cart/state/cart_controller.dart';
@@ -20,6 +21,7 @@ class RestaurantDetailScreen extends StatefulWidget {
     required this.cartController,
     required this.addressController,
     required this.checkoutController,
+    required this.currentUser,
   });
 
   final int restaurantId;
@@ -28,6 +30,7 @@ class RestaurantDetailScreen extends StatefulWidget {
   final CartController cartController;
   final AddressController addressController;
   final CheckoutController checkoutController;
+  final AppUser? currentUser;
 
   @override
   State<RestaurantDetailScreen> createState() => _RestaurantDetailScreenState();
@@ -116,6 +119,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
                         controller: widget.cartController,
                         addressController: widget.addressController,
                         checkoutController: widget.checkoutController,
+                        currentUser: widget.currentUser,
                       ),
                     ],
                     flexibleSpace: FlexibleSpaceBar(
@@ -162,6 +166,7 @@ class _RestaurantDetailScreenState extends State<RestaurantDetailScreen> {
             cartController: widget.cartController,
             addressController: widget.addressController,
             checkoutController: widget.checkoutController,
+            currentUser: widget.currentUser,
           );
         },
       ),
@@ -174,11 +179,13 @@ class _ViewCartBar extends StatelessWidget {
     required this.cartController,
     required this.addressController,
     required this.checkoutController,
+    required this.currentUser,
   });
 
   final CartController cartController;
   final AddressController addressController;
   final CheckoutController checkoutController;
+  final AppUser? currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -198,6 +205,7 @@ class _ViewCartBar extends StatelessWidget {
                   controller: cartController,
                   addressController: addressController,
                   checkoutController: checkoutController,
+                  currentUser: currentUser,
                 ),
               ),
             ),
@@ -536,6 +544,29 @@ class _MenuItemTile extends StatelessWidget {
                           style: TextStyle(color: Colors.white, fontSize: 11),
                         ),
                       ),
+                    )
+                  else if (item.isPreorder)
+                    Positioned(
+                      left: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.orange.shade700,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Text(
+                          'Pre-order',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
                     ),
                 ],
               ),
@@ -563,6 +594,14 @@ class _MenuItemTile extends StatelessWidget {
                       fontSize: 13,
                     ),
                   ),
+                  if (item.isPreorder && item.preorderLeadDays != null)
+                    Text(
+                      '${item.preorderLeadDays} day${item.preorderLeadDays == 1 ? '' : 's'} notice',
+                      style: TextStyle(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 11,
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -676,9 +715,13 @@ class _AddButton extends StatelessWidget {
     );
 
     if (context.mounted) {
+      final message = item.isPreorder
+          ? '${item.name} added — this needs ${item.preorderLeadDays} day(s) advance notice'
+          : '${item.name} added to cart';
+
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('${item.name} added to cart')));
+      ).showSnackBar(SnackBar(content: Text(message)));
     }
   }
 }

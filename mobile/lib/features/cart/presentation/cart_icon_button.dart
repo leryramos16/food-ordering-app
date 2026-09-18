@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../addresses/state/address_controller.dart';
+import '../../auth/domain/app_user.dart';
 import '../../orders/state/checkout_controller.dart';
 import '../state/cart_controller.dart';
 import 'cart_screen.dart';
@@ -11,11 +12,13 @@ class CartIconButton extends StatelessWidget {
     required this.controller,
     required this.addressController,
     required this.checkoutController,
+    required this.currentUser,
   });
 
   final CartController controller;
   final AddressController addressController;
   final CheckoutController checkoutController;
+  final AppUser? currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -31,6 +34,7 @@ class CartIconButton extends StatelessWidget {
                   controller: controller,
                   addressController: addressController,
                   checkoutController: checkoutController,
+                  currentUser: currentUser,
                 ),
               ),
             ),

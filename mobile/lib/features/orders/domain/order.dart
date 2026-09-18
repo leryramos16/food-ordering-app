@@ -5,6 +5,12 @@ class Order {
     required this.id,
     required this.orderNumber,
     required this.status,
+    this.isPreorder = false,
+    this.requestedDate,
+    this.requestedTime,
+    this.fulfillmentType = 'delivery',
+    this.contactName,
+    this.contactPhone,
     required this.restaurantName,
     required this.recipientName,
     required this.recipientPhone,
@@ -26,12 +32,23 @@ class Order {
   final int id;
   final String orderNumber;
   final String status;
+  final bool isPreorder;
+  final DateTime? requestedDate;
+
+  /// 24-hour "HH:mm" string, e.g. "14:30" — kept as a plain string since
+  /// it's a time-of-day with no associated date to reason about.
+  final String? requestedTime;
+  final String fulfillmentType;
+  final String? contactName;
+  final String? contactPhone;
   final String? restaurantName;
   final String recipientName;
   final String recipientPhone;
-  final String addressLine;
+
+  /// Null for a pre-order being picked up — there's no delivery address.
+  final String? addressLine;
   final String? barangay;
-  final String city;
+  final String? city;
   final String? province;
   final String? postalCode;
   final double subtotal;
@@ -43,12 +60,18 @@ class Order {
   final DateTime? placedAt;
   final List<OrderItem> items;
 
+  bool get isPickup => fulfillmentType == 'pickup';
+
   /// The delivery address, fully assembled from whichever parts are
-  /// present — barangay and postal code are optional on an address.
+  /// present — barangay and postal code are optional on an address, and
+  /// there's no address at all for a pickup order.
   String get fullAddress {
-    final parts = [addressLine, barangay, city, province]
-        .where((part) => part != null && part.isNotEmpty)
-        .join(', ');
+    final parts = [
+      addressLine,
+      barangay,
+      city,
+      province,
+    ].where((part) => part != null && part.isNotEmpty).join(', ');
 
     return postalCode == null || postalCode!.isEmpty
         ? parts
@@ -66,12 +89,20 @@ class Order {
       id: json['id'] as int,
       orderNumber: json['order_number'] as String,
       status: json['status'] as String,
+      isPreorder: json['is_preorder'] as bool? ?? false,
+      requestedDate: json['requested_date'] != null
+          ? DateTime.tryParse(json['requested_date'] as String)
+          : null,
+      requestedTime: json['requested_time'] as String?,
+      fulfillmentType: json['fulfillment_type'] as String? ?? 'delivery',
+      contactName: json['contact_name'] as String?,
+      contactPhone: json['contact_phone'] as String?,
       restaurantName: restaurant?['name'] as String?,
       recipientName: deliveryAddress['recipient_name'] as String,
       recipientPhone: deliveryAddress['phone'] as String,
-      addressLine: deliveryAddress['address_line'] as String,
+      addressLine: deliveryAddress['address_line'] as String?,
       barangay: deliveryAddress['barangay'] as String?,
-      city: deliveryAddress['city'] as String,
+      city: deliveryAddress['city'] as String?,
       province: deliveryAddress['province'] as String?,
       postalCode: deliveryAddress['postal_code'] as String?,
       subtotal: double.parse(json['subtotal'].toString()),
@@ -85,7 +116,8 @@ class Order {
           : null,
       items: items
           .map(
-            (item) => OrderItem.fromJson(Map<String, dynamic>.from(item as Map)),
+            (item) =>
+                OrderItem.fromJson(Map<String, dynamic>.from(item as Map)),
           )
           .toList(),
     );

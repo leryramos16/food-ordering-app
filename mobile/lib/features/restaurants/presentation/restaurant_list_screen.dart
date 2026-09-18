@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../addresses/state/address_controller.dart';
+import '../../auth/domain/app_user.dart';
 import '../../cart/state/cart_controller.dart';
 import '../../orders/state/checkout_controller.dart';
 import '../data/restaurant_service.dart';
@@ -16,6 +17,7 @@ class RestaurantListScreen extends StatefulWidget {
     required this.cartController,
     required this.addressController,
     required this.checkoutController,
+    required this.currentUser,
   });
 
   final RestaurantController controller;
@@ -23,6 +25,7 @@ class RestaurantListScreen extends StatefulWidget {
   final CartController cartController;
   final AddressController addressController;
   final CheckoutController checkoutController;
+  final AppUser? currentUser;
 
   @override
   State<RestaurantListScreen> createState() => _RestaurantListScreenState();
@@ -92,6 +95,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                       cartController: widget.cartController,
                       addressController: widget.addressController,
                       checkoutController: widget.checkoutController,
+                      currentUser: widget.currentUser,
                     ),
                   ),
                 ),

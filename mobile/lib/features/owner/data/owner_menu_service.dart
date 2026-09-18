@@ -62,6 +62,8 @@ class OwnerMenuService {
     required double price,
     required bool isAvailable,
     int? preparationTimeMinutes,
+    required bool isPreorder,
+    int? preorderLeadDays,
   }) async {
     await _api.post(
       '/owner/categories/$categoryId/menu-items',
@@ -72,6 +74,8 @@ class OwnerMenuService {
         price: price,
         isAvailable: isAvailable,
         preparationTimeMinutes: preparationTimeMinutes,
+        isPreorder: isPreorder,
+        preorderLeadDays: preorderLeadDays,
       ),
     );
   }
@@ -83,6 +87,8 @@ class OwnerMenuService {
     required double price,
     required bool isAvailable,
     int? preparationTimeMinutes,
+    required bool isPreorder,
+    int? preorderLeadDays,
   }) async {
     await _api.put(
       '/owner/menu-items/$id',
@@ -93,6 +99,8 @@ class OwnerMenuService {
         price: price,
         isAvailable: isAvailable,
         preparationTimeMinutes: preparationTimeMinutes,
+        isPreorder: isPreorder,
+        preorderLeadDays: preorderLeadDays,
       ),
     );
   }
@@ -115,6 +123,8 @@ class OwnerMenuService {
     required double price,
     required bool isAvailable,
     int? preparationTimeMinutes,
+    required bool isPreorder,
+    int? preorderLeadDays,
   }) {
     return {
       'name': name.trim(),
@@ -124,6 +134,8 @@ class OwnerMenuService {
       'price': price,
       'is_available': isAvailable,
       'preparation_time_minutes': preparationTimeMinutes,
+      'is_preorder': isPreorder,
+      'preorder_lead_days': isPreorder ? preorderLeadDays : null,
     };
   }
 }

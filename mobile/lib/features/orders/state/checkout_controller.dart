@@ -16,9 +16,14 @@ class CheckoutController extends ChangeNotifier {
 
   Future<Order?> placeOrder({
     required CartController cart,
-    required int addressId,
+    int? addressId,
     required String paymentMethod,
     String? notes,
+    DateTime? requestedDate,
+    String? requestedTime,
+    String? fulfillmentType,
+    String? contactName,
+    String? contactPhone,
   }) async {
     isSubmitting = true;
     errorMessage = null;
@@ -30,6 +35,11 @@ class CheckoutController extends ChangeNotifier {
         addressId: addressId,
         paymentMethod: paymentMethod,
         notes: notes,
+        requestedDate: requestedDate,
+        requestedTime: requestedTime,
+        fulfillmentType: fulfillmentType,
+        contactName: contactName,
+        contactPhone: contactPhone,
       );
       cart.clear();
       return order;

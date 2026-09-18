@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../addresses/state/address_controller.dart';
+import '../../auth/domain/app_user.dart';
 import '../../orders/presentation/checkout_screen.dart';
 import '../../orders/state/checkout_controller.dart';
 import '../state/cart_controller.dart';
@@ -11,11 +12,13 @@ class CartScreen extends StatelessWidget {
     required this.controller,
     required this.addressController,
     required this.checkoutController,
+    required this.currentUser,
   });
 
   final CartController controller;
   final AddressController addressController;
   final CheckoutController checkoutController;
+  final AppUser? currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +87,7 @@ class CartScreen extends StatelessWidget {
                       controller: controller,
                       addressController: addressController,
                       checkoutController: checkoutController,
+                      currentUser: currentUser,
                     ),
                   ],
                 ),
@@ -137,11 +141,13 @@ class _CartSummary extends StatelessWidget {
     required this.controller,
     required this.addressController,
     required this.checkoutController,
+    required this.currentUser,
   });
 
   final CartController controller;
   final AddressController addressController;
   final CheckoutController checkoutController;
+  final AppUser? currentUser;
 
   @override
   Widget build(BuildContext context) {
@@ -176,6 +182,7 @@ class _CartSummary extends StatelessWidget {
                     cartController: controller,
                     addressController: addressController,
                     checkoutController: checkoutController,
+                    currentUser: currentUser,
                   ),
                 ),
               ),

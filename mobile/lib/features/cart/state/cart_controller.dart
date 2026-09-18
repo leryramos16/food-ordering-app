@@ -20,6 +20,23 @@ class CartController extends ChangeNotifier {
 
   double get total => subtotal + (isEmpty ? 0 : deliveryFee);
 
+  /// The longest advance-notice requirement among any pre-order item
+  /// currently in the cart. 0 means nothing here needs advance notice.
+  int get requiredPreorderLeadDays {
+    var maxDays = 0;
+
+    for (final item in _items) {
+      if (item.menuItem.isPreorder) {
+        final days = item.menuItem.preorderLeadDays ?? 1;
+        if (days > maxDays) maxDays = days;
+      }
+    }
+
+    return maxDays;
+  }
+
+  bool get requiresPreorderDate => requiredPreorderLeadDays > 0;
+
   /// A cart can only hold items from one restaurant at a time. This tells
   /// the UI whether adding from [otherRestaurantId] would conflict with
   /// what's already in the cart, so it can ask the user first.

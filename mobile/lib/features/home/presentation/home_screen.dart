@@ -62,6 +62,7 @@ class HomeScreen extends StatelessWidget {
             controller: cartController,
             addressController: addressController,
             checkoutController: checkoutController,
+            currentUser: authController.user,
           ),
           const SizedBox(width: 4),
         ],
@@ -72,6 +73,7 @@ class HomeScreen extends StatelessWidget {
         cartController: cartController,
         addressController: addressController,
         checkoutController: checkoutController,
+        currentUser: authController.user,
       ),
     );
   }

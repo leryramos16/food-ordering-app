@@ -37,7 +37,11 @@ class _MenuItemFormScreenState extends State<MenuItemFormScreen> {
   late final _preparationTime = TextEditingController(
     text: widget.menuItem?.preparationTimeMinutes?.toString(),
   );
+  late final _preorderLeadDays = TextEditingController(
+    text: widget.menuItem?.preorderLeadDays?.toString(),
+  );
   late bool _isAvailable = widget.menuItem?.isAvailable ?? true;
+  late bool _isPreorder = widget.menuItem?.isPreorder ?? false;
 
   bool get _isEditing => widget.menuItem != null;
 
@@ -61,6 +65,7 @@ class _MenuItemFormScreenState extends State<MenuItemFormScreen> {
     _description.dispose();
     _price.dispose();
     _preparationTime.dispose();
+    _preorderLeadDays.dispose();
     super.dispose();
   }
 
@@ -143,11 +148,40 @@ class _MenuItemFormScreenState extends State<MenuItemFormScreen> {
                   value: _isAvailable,
                   onChanged: (value) => setState(() => _isAvailable = value),
                 ),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('Pre-order / advance order only'),
+                  subtitle: const Text(
+                    'e.g. a custom cake that needs advance notice',
+                  ),
+                  value: _isPreorder,
+                  onChanged: (value) => setState(() => _isPreorder = value),
+                ),
+                if (_isPreorder) ...[
+                  const SizedBox(height: 14),
+                  TextFormField(
+                    controller: _preorderLeadDays,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Days of advance notice needed',
+                      hintText: 'e.g. 2',
+                    ),
+                    validator: (value) {
+                      if (!_isPreorder) return null;
+                      final parsed = int.tryParse(value ?? '');
+                      return parsed == null || parsed < 1
+                          ? 'Enter how many days notice this needs.'
+                          : null;
+                    },
+                  ),
+                ],
                 if (widget.controller.errorMessage != null) ...[
                   const SizedBox(height: 8),
                   Text(
                     widget.controller.errorMessage!,
-                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                 ],
                 const SizedBox(height: 20),
@@ -175,6 +209,10 @@ class _MenuItemFormScreenState extends State<MenuItemFormScreen> {
         ? null
         : int.tryParse(_preparationTime.text.trim());
 
+    final preorderLeadDays = _isPreorder
+        ? int.tryParse(_preorderLeadDays.text.trim())
+        : null;
+
     final success = _isEditing
         ? await widget.controller.updateMenuItem(
             id: widget.menuItem!.id,
@@ -183,6 +221,8 @@ class _MenuItemFormScreenState extends State<MenuItemFormScreen> {
             price: double.parse(_price.text),
             isAvailable: _isAvailable,
             preparationTimeMinutes: preparationTime,
+            isPreorder: _isPreorder,
+            preorderLeadDays: preorderLeadDays,
           )
         : await widget.controller.createMenuItem(
             categoryId: widget.categoryId,
@@ -191,6 +231,8 @@ class _MenuItemFormScreenState extends State<MenuItemFormScreen> {
             price: double.parse(_price.text),
             isAvailable: _isAvailable,
             preparationTimeMinutes: preparationTime,
+            isPreorder: _isPreorder,
+            preorderLeadDays: preorderLeadDays,
           );
 
     if (success && mounted) Navigator.of(context).pop();

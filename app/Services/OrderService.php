@@ -8,6 +8,7 @@ use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\Restaurant;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -47,20 +48,6 @@ class OrderService
                 ]);
             }
 
-            // To make sure address belongs to this customer
-            $address = Address::query()
-                ->whereKey($data['address_id'])
-                ->where('user_id', $user->id)
-                ->first();
-            
-            if (!$address) {
-                throw ValidationException::withMessages([
-                    'address_id' => [
-                        'The selected address does not belong to this user.',
-                    ],
-                ]);
-            }
-
             // Load requested menu items
             $requestedItems = collect($data['items']);
 
@@ -78,6 +65,10 @@ class OrderService
             $subtotalCents = 0;
 
             $orderLines = [];
+
+            // The longest lead time among any pre-order item in this cart —
+            // 0 means nothing here needs advance notice.
+            $requiredLeadDays = 0;
 
             foreach ($requestedItems as $requestedItem) {
                 
@@ -119,6 +110,10 @@ class OrderService
 
                 $subtotalCents += $lineTotalCents;
 
+                if ($menuItem->is_preorder) {
+                    $requiredLeadDays = max($requiredLeadDays, $menuItem->preorder_lead_days ?? 1);
+                }
+
                 $orderLines[] = [
                     'menu_item_id' => $menuItem->id,
                     'item_name'    => $menuItem->name,
@@ -139,8 +134,81 @@ class OrderService
                     ]);
                 }
 
-                // Calculate authoritative totals.
-                $deliveryFeeCents =  $this->moneyToCents($restaurant->delivery_fee);
+                // If anything in the cart needs advance notice, a valid
+                // requested_date meeting the longest lead time is mandatory,
+                // along with a time, a fulfillment choice, and someone to
+                // contact about it. A regular (non-preorder) order skips
+                // all of this and behaves exactly as before.
+                $isPreorder = $requiredLeadDays > 0;
+                $requestedDate = null;
+                $requestedTime = null;
+                $fulfillmentType = 'delivery';
+                $contactName = null;
+                $contactPhone = null;
+
+                if ($isPreorder) {
+                    if (empty($data['requested_date'])) {
+                        throw ValidationException::withMessages([
+                            'requested_date' => [
+                                "This order includes a pre-order item — pick a date at least {$requiredLeadDays} day(s) from now.",
+                            ],
+                        ]);
+                    }
+
+                    $requestedDate = Carbon::parse($data['requested_date'])->startOfDay();
+                    $earliestDate = now()->addDays($requiredLeadDays)->startOfDay();
+
+                    if ($requestedDate->lt($earliestDate)) {
+                        throw ValidationException::withMessages([
+                            'requested_date' => [
+                                "The earliest available date for this order is {$earliestDate->toDateString()}.",
+                            ],
+                        ]);
+                    }
+
+                    if (empty($data['requested_time'])) {
+                        throw ValidationException::withMessages([
+                            'requested_time' => ['Pick a time for this order.'],
+                        ]);
+                    }
+
+                    $requestedTime = $data['requested_time'];
+                    $fulfillmentType = $data['fulfillment_type'] ?? 'delivery';
+
+                    if (empty($data['contact_name']) || empty($data['contact_phone'])) {
+                        throw ValidationException::withMessages([
+                            'contact_name' => ['A contact name and phone number are required for a pre-order.'],
+                        ]);
+                    }
+
+                    $contactName = $data['contact_name'];
+                    $contactPhone = $data['contact_phone'];
+                }
+
+                // Delivery details: a real Address record unless this is a
+                // pre-order being picked up, in which case there is none.
+                $address = null;
+
+                if ($fulfillmentType !== 'pickup') {
+                    $address = Address::query()
+                        ->whereKey($data['address_id'] ?? null)
+                        ->where('user_id', $user->id)
+                        ->first();
+
+                    if (!$address) {
+                        throw ValidationException::withMessages([
+                            'address_id' => [
+                                'The selected address does not belong to this user.',
+                            ],
+                        ]);
+                    }
+                }
+
+                // Calculate authoritative totals. No delivery fee when the
+                // customer is picking the order up themselves.
+                $deliveryFeeCents = $fulfillmentType === 'pickup'
+                    ? 0
+                    : $this->moneyToCents($restaurant->delivery_fee);
 
                 // Promotions implement soon.
                 $discountCents = 0;
@@ -156,33 +224,42 @@ class OrderService
 
                     'restaurant_id' => $restaurant->id,
 
-                    'address_id' => $address->id,
+                    'address_id' => $address?->id,
 
                     /*
-                    * Address snapshot
+                    * Delivery snapshot — from the chosen Address, or from
+                    * the pre-order's contact info when there's no address
+                    * at all (a pickup order).
                     */
                     'delivery_recipient_name' =>
-                        $address->recipient_name,
+                        $address?->recipient_name ?? $contactName,
 
                     'delivery_phone' =>
-                        $address->phone,
+                        $address?->phone ?? $contactPhone,
 
                     'delivery_address_line' =>
-                        $address->address_line,
+                        $address?->address_line,
 
                     'delivery_barangay' =>
-                        $address->barangay,
+                        $address?->barangay,
 
                     'delivery_city' =>
-                        $address->city,
+                        $address?->city,
 
                     'delivery_province' =>
-                        $address->province,
+                        $address?->province,
 
                     'delivery_postal_code' =>
-                        $address->postal_code,
+                        $address?->postal_code,
 
                     'status' => 'pending',
+
+                    'is_preorder' => $isPreorder,
+                    'requested_date' => $requestedDate,
+                    'requested_time' => $requestedTime,
+                    'fulfillment_type' => $fulfillmentType,
+                    'contact_name' => $contactName,
+                    'contact_phone' => $contactPhone,
 
                     'subtotal' =>
                         $this->centsToMoney($subtotalCents),

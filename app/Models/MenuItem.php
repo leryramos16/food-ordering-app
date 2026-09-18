@@ -16,6 +16,8 @@ class MenuItem extends Model
         'image_url',
         'is_available',
         'preparation_time_minutes',
+        'is_preorder',
+        'preorder_lead_days',
     ];
 
     protected function casts(): array
@@ -24,6 +26,8 @@ class MenuItem extends Model
             'price' => 'decimal:2',
             'is_available' => 'boolean',
             'preparation_time_minutes' => 'integer',
+            'is_preorder' => 'boolean',
+            'preorder_lead_days' => 'integer',
         ];
     }
 

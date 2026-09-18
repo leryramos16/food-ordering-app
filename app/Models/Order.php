@@ -23,6 +23,12 @@ class Order extends Model
         'delivery_postal_code',
 
         'status',
+        'is_preorder',
+        'requested_date',
+        'requested_time',
+        'fulfillment_type',
+        'contact_name',
+        'contact_phone',
 
         'subtotal',
         'delivery_fee',
@@ -45,6 +51,8 @@ class Order extends Model
             'discount_amount' => 'decimal:2',
             'total_amount' => 'decimal:2',
             'placed_at' => 'datetime',
+            'is_preorder' => 'boolean',
+            'requested_date' => 'date',
         ];
     }
 

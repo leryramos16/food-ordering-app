@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/order.dart';
 import '../state/my_orders_controller.dart';
+import 'preorder_badge.dart';
 import 'status_chip.dart';
 
 class MyOrdersScreen extends StatefulWidget {
@@ -65,9 +66,8 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
               padding: const EdgeInsets.all(16),
               itemCount: controller.orders.length,
               separatorBuilder: (_, _) => const SizedBox(height: 12),
-              itemBuilder: (context, index) => _OrderCard(
-                order: controller.orders[index],
-              ),
+              itemBuilder: (context, index) =>
+                  _OrderCard(order: controller.orders[index]),
             ),
           );
         },
@@ -131,6 +131,14 @@ class _OrderCard extends StatelessWidget {
                   ),
               ],
             ),
+            if (order.isPreorder && order.requestedDate != null) ...[
+              const SizedBox(height: 8),
+              PreorderBadge(
+                date: order.requestedDate!,
+                time: order.requestedTime,
+                fulfillmentType: order.fulfillmentType,
+              ),
+            ],
             const Divider(height: 20),
             for (final item in order.items)
               Padding(
@@ -164,8 +172,18 @@ class _OrderCard extends StatelessWidget {
   }
 
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   String _formatDate(DateTime dateTime) {
@@ -179,7 +197,10 @@ class _OrderCard extends StatelessWidget {
 }
 
 class _PaymentBadge extends StatelessWidget {
-  const _PaymentBadge({required this.paymentMethod, required this.paymentStatus});
+  const _PaymentBadge({
+    required this.paymentMethod,
+    required this.paymentStatus,
+  });
 
   final String paymentMethod;
   final String paymentStatus;

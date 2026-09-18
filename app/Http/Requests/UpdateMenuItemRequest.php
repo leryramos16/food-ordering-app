@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateMenuItemRequest extends FormRequest
 {
@@ -20,6 +21,14 @@ class UpdateMenuItemRequest extends FormRequest
             'image_url' => ['nullable', 'string', 'max:255'],
             'is_available' => ['nullable', 'boolean'],
             'preparation_time_minutes' => ['nullable', 'integer', 'min:0'],
+            'is_preorder' => ['nullable', 'boolean'],
+            'preorder_lead_days' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:60',
+                Rule::requiredIf($this->boolean('is_preorder')),
+            ],
         ];
     }
 }

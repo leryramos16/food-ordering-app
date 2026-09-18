@@ -9,9 +9,14 @@ class OrderService {
 
   Future<Order> placeOrder({
     required CartController cart,
-    required int addressId,
+    int? addressId,
     required String paymentMethod,
     String? notes,
+    DateTime? requestedDate,
+    String? requestedTime,
+    String? fulfillmentType,
+    String? contactName,
+    String? contactPhone,
   }) async {
     final response = await _api.post(
       '/orders',
@@ -21,6 +26,15 @@ class OrderService {
         'address_id': addressId,
         'payment_method': paymentMethod,
         'notes': notes?.trim().isEmpty == true ? null : notes?.trim(),
+        'requested_date': requestedDate?.toIso8601String().split('T').first,
+        'requested_time': requestedTime,
+        'fulfillment_type': fulfillmentType,
+        'contact_name': contactName?.trim().isEmpty == true
+            ? null
+            : contactName?.trim(),
+        'contact_phone': contactPhone?.trim().isEmpty == true
+            ? null
+            : contactPhone?.trim(),
         'items': [
           for (final cartItem in cart.items)
             {

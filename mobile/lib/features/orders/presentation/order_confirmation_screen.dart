@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../domain/order.dart';
+import 'preorder_badge.dart';
 
 class OrderConfirmationScreen extends StatelessWidget {
   const OrderConfirmationScreen({super.key, required this.order});
@@ -75,6 +76,14 @@ class OrderConfirmationScreen extends StatelessWidget {
                     color: colorScheme.onSurfaceVariant,
                   ),
                 ),
+                if (order.isPreorder && order.requestedDate != null) ...[
+                  const SizedBox(height: 8),
+                  PreorderBadge(
+                    date: order.requestedDate!,
+                    time: order.requestedTime,
+                    fulfillmentType: order.fulfillmentType,
+                  ),
+                ],
                 const SizedBox(height: 20),
                 Card(
                   child: Padding(
@@ -102,7 +111,9 @@ class OrderConfirmationScreen extends StatelessWidget {
                             ),
                             Text(
                               '₱${order.totalAmount.toStringAsFixed(2)}',
-                              style: const TextStyle(fontWeight: FontWeight.w800),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
                           ],
                         ),
@@ -112,7 +123,9 @@ class OrderConfirmationScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Delivering to ${order.addressLine}, ${order.city}',
+                  order.isPickup
+                      ? "You'll pick this up at the restaurant."
+                      : 'Delivering to ${order.fullAddress}',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),

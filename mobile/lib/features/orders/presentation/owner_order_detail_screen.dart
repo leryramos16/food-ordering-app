@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/order.dart';
 import '../state/owner_order_controller.dart';
+import 'preorder_badge.dart';
 import 'status_chip.dart';
 
 class OwnerOrderDetailScreen extends StatelessWidget {
@@ -17,7 +18,10 @@ class OwnerOrderDetailScreen extends StatelessWidget {
   /// Mirrors the backend's allowed status transitions (see
   /// OwnerOrderController::STATUS_TRANSITIONS) so the buttons shown here
   /// only ever offer moves the server will actually accept.
-  static const Map<String, List<(String label, String target, bool destructive)>>
+  static const Map<
+    String,
+    List<(String label, String target, bool destructive)>
+  >
   _nextActions = {
     'pending': [
       ('Start preparing', 'preparing', false),
@@ -76,6 +80,14 @@ class OwnerOrderDetailScreen extends StatelessWidget {
                     ),
                 ],
               ),
+              if (current.isPreorder && current.requestedDate != null) ...[
+                const SizedBox(height: 10),
+                PreorderBadge(
+                  date: current.requestedDate!,
+                  time: current.requestedTime,
+                  fulfillmentType: current.fulfillmentType,
+                ),
+              ],
               const SizedBox(height: 20),
 
               _SectionCard(
@@ -119,14 +131,42 @@ class OwnerOrderDetailScreen extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Icon(
-                                Icons.location_on_outlined,
+                                current.isPickup
+                                    ? Icons.storefront_outlined
+                                    : Icons.location_on_outlined,
                                 size: 15,
                                 color: colorScheme.onSurfaceVariant,
                               ),
                               const SizedBox(width: 6),
-                              Expanded(child: Text(current.fullAddress)),
+                              Expanded(
+                                child: Text(
+                                  current.isPickup
+                                      ? 'Picking up at the restaurant'
+                                      : current.fullAddress,
+                                ),
+                              ),
                             ],
                           ),
+                          if (current.contactName != null &&
+                              current.contactPhone != null) ...[
+                            const SizedBox(height: 10),
+                            const Divider(height: 1),
+                            const SizedBox(height: 10),
+                            Text(
+                              'Order contact',
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(
+                                    color: colorScheme.onSurfaceVariant,
+                                  ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${current.contactName} • ${current.contactPhone}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -156,7 +196,9 @@ class OwnerOrderDetailScreen extends StatelessWidget {
                               ),
                               child: Text(
                                 '${item.quantity}x',
-                                style: const TextStyle(fontWeight: FontWeight.w700),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                ),
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -169,7 +211,12 @@ class OwnerOrderDetailScreen extends StatelessWidget {
                     _moneyRow(context, 'Subtotal', current.subtotal),
                     _moneyRow(context, 'Delivery fee', current.deliveryFee),
                     const Divider(height: 20),
-                    _moneyRow(context, 'Total', current.totalAmount, emphasize: true),
+                    _moneyRow(
+                      context,
+                      'Total',
+                      current.totalAmount,
+                      emphasize: true,
+                    ),
                   ],
                 ),
               ),
@@ -220,7 +267,9 @@ class OwnerOrderDetailScreen extends StatelessWidget {
                       label: const Text('Mark paid'),
                     ),
                   ),
-                for (final (label, target, destructive) in _actionsForStatus(current))
+                for (final (label, target, destructive) in _actionsForStatus(
+                  current,
+                ))
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: destructive
@@ -229,7 +278,8 @@ class OwnerOrderDetailScreen extends StatelessWidget {
                             child: OutlinedButton(
                               onPressed: _isSubmitting(current)
                                   ? null
-                                  : () => _updateStatus(context, current, target),
+                                  : () =>
+                                        _updateStatus(context, current, target),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: colorScheme.error,
                                 side: BorderSide(color: colorScheme.error),
@@ -243,7 +293,8 @@ class OwnerOrderDetailScreen extends StatelessWidget {
                             child: FilledButton(
                               onPressed: _isSubmitting(current)
                                   ? null
-                                  : () => _updateStatus(context, current, target),
+                                  : () =>
+                                        _updateStatus(context, current, target),
                               child: Text(label),
                             ),
                           ),
@@ -273,7 +324,9 @@ class OwnerOrderDetailScreen extends StatelessWidget {
     bool emphasize = false,
   }) {
     final style = emphasize
-        ? Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)
+        ? Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800)
         : Theme.of(context).textTheme.bodyMedium;
 
     return Padding(
@@ -292,19 +345,27 @@ class OwnerOrderDetailScreen extends StatelessWidget {
       _nextActions[order.status] ?? const [];
 
   bool _canMarkPaid(Order order) =>
-      order.paymentMethod == 'cash_on_delivery' && order.paymentStatus == 'unpaid';
+      order.paymentMethod == 'cash_on_delivery' &&
+      order.paymentStatus == 'unpaid';
 
   bool _hasActions(Order order) =>
       _actionsForStatus(order).isNotEmpty || _canMarkPaid(order);
 
-  bool _isSubmitting(Order order) => controller.submittingOrderIds.contains(order.id);
+  bool _isSubmitting(Order order) =>
+      controller.submittingOrderIds.contains(order.id);
 
-  Future<void> _updateStatus(BuildContext context, Order order, String target) async {
+  Future<void> _updateStatus(
+    BuildContext context,
+    Order order,
+    String target,
+  ) async {
     final success = await controller.updateStatus(order.id, target);
 
     if (!success && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(controller.errorMessage ?? 'Something went wrong.')),
+        SnackBar(
+          content: Text(controller.errorMessage ?? 'Something went wrong.'),
+        ),
       );
     }
   }
@@ -314,14 +375,26 @@ class OwnerOrderDetailScreen extends StatelessWidget {
 
     if (!success && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(controller.errorMessage ?? 'Something went wrong.')),
+        SnackBar(
+          content: Text(controller.errorMessage ?? 'Something went wrong.'),
+        ),
       );
     }
   }
 
   static const _months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
 
   String _formatDate(DateTime dateTime) {
@@ -390,7 +463,11 @@ class _PaymentStatusBadge extends StatelessWidget {
       'paid' => (Icons.check_circle, Colors.green, 'Paid'),
       'failed' => (Icons.error, Colors.red, 'Failed'),
       'pending' => (Icons.hourglass_top, Colors.orange, 'Pending'),
-      _ => (Icons.radio_button_unchecked, colorScheme.onSurfaceVariant, 'Unpaid'),
+      _ => (
+        Icons.radio_button_unchecked,
+        colorScheme.onSurfaceVariant,
+        'Unpaid',
+      ),
     };
 
     return Row(
@@ -398,7 +475,10 @@ class _PaymentStatusBadge extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: color),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: TextStyle(color: color, fontWeight: FontWeight.w600),
+        ),
       ],
     );
   }

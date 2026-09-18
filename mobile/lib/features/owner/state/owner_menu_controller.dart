@@ -73,6 +73,8 @@ class OwnerMenuController extends ChangeNotifier {
     required double price,
     required bool isAvailable,
     int? preparationTimeMinutes,
+    required bool isPreorder,
+    int? preorderLeadDays,
   }) {
     return _mutate(
       () => _service.createMenuItem(
@@ -82,6 +84,8 @@ class OwnerMenuController extends ChangeNotifier {
         price: price,
         isAvailable: isAvailable,
         preparationTimeMinutes: preparationTimeMinutes,
+        isPreorder: isPreorder,
+        preorderLeadDays: preorderLeadDays,
       ),
     );
   }
@@ -93,6 +97,8 @@ class OwnerMenuController extends ChangeNotifier {
     required double price,
     required bool isAvailable,
     int? preparationTimeMinutes,
+    required bool isPreorder,
+    int? preorderLeadDays,
   }) {
     return _mutate(
       () => _service.updateMenuItem(
@@ -102,6 +108,8 @@ class OwnerMenuController extends ChangeNotifier {
         price: price,
         isAvailable: isAvailable,
         preparationTimeMinutes: preparationTimeMinutes,
+        isPreorder: isPreorder,
+        preorderLeadDays: preorderLeadDays,
       ),
     );
   }

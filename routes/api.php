@@ -12,7 +12,12 @@ use App\Http\Controllers\Api\OrderController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
-    Route::post('/register', [AuthController::class, 'register']);
+    // throttle:5,1 — these trigger a paid SMS send, so cap attempts per IP.
+    Route::post('/register/request-otp', [AuthController::class, 'requestRegistrationOtp'])
+        ->middleware('throttle:5,1');
+    Route::post('/register/verify-otp', [AuthController::class, 'verifyRegistrationOtp'])
+        ->middleware('throttle:10,1');
+
     Route::post('/login', [AuthController::class, 'login']);
 
     Route::middleware('auth:sanctum')->group(function () {

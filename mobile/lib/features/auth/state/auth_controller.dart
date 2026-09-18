@@ -24,22 +24,39 @@ class AuthController extends ChangeNotifier {
     return _run(() => _service.login(email: email, password: password));
   }
 
-  Future<bool> register(
+  /// Returns true if the code was sent. Doesn't touch [user] — no account
+  /// exists until the code is verified.
+  Future<bool> requestRegistrationOtp(
     String name,
     String email,
     String phone,
     String password,
     String role,
-  ) {
-    return _run(
-      () => _service.register(
+  ) async {
+    errorMessage = null;
+    isSubmitting = true;
+    notifyListeners();
+
+    try {
+      await _service.requestRegistrationOtp(
         name: name,
         email: email,
         phone: phone,
         password: password,
         role: role,
-      ),
-    );
+      );
+      return true;
+    } catch (error) {
+      errorMessage = error.toString();
+      return false;
+    } finally {
+      isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> verifyRegistrationOtp(String phone, String code) {
+    return _run(() => _service.verifyRegistrationOtp(phone: phone, code: code));
   }
 
   Future<void> logout() async {

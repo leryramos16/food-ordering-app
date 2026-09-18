@@ -8,24 +8,36 @@ class AuthService {
   final ApiClient _api;
   final TokenStorage _storage;
 
-  Future<AppUser> register({
+  /// Step 1 of registration: submits the form and triggers an SMS code.
+  /// No account exists yet — [verifyRegistrationOtp] is what creates it.
+  Future<void> requestRegistrationOtp({
     required String name,
     required String email,
-    String? phone,
+    required String phone,
     required String password,
     required String role,
   }) async {
-    final response = await _api.post(
-      '/auth/register',
+    await _api.post(
+      '/auth/register/request-otp',
       body: {
         'name': name.trim(),
         'email': email.trim(),
-        'phone': phone?.trim().isEmpty == true ? null : phone?.trim(),
+        'phone': phone.trim(),
         'password': password,
         'password_confirmation': password,
         'role': role,
         'device_name': 'food-ordering-mobile',
       },
+    );
+  }
+
+  Future<AppUser> verifyRegistrationOtp({
+    required String phone,
+    required String code,
+  }) async {
+    final response = await _api.post(
+      '/auth/register/verify-otp',
+      body: {'phone': phone.trim(), 'code': code.trim()},
     );
     return _saveSession(response);
   }

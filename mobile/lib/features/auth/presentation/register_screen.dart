@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../state/auth_controller.dart';
 import 'auth_layout.dart';
+import 'otp_verification_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({required this.authController, super.key});
@@ -97,8 +98,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 controller: _phone,
                 keyboardType: TextInputType.phone,
                 decoration: const InputDecoration(
-                  labelText: 'Phone (optional)',
+                  labelText: 'Phone',
+                  helperText:
+                      "We'll text a code to verify it, e.g. 09171234567.",
                 ),
+                validator: (value) {
+                  final phone = value?.trim() ?? '';
+                  return RegExp(r'^09\d{9}$').hasMatch(phone)
+                      ? null
+                      : 'Enter a valid PH mobile number (09XXXXXXXXX).';
+                },
               ),
               const SizedBox(height: 14),
               TextFormField(
@@ -161,14 +170,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    final success = await widget.authController.register(
+
+    final success = await widget.authController.requestRegistrationOtp(
       _name.text,
       _email.text,
       _phone.text,
       _password.text,
       _role,
     );
-    if (success && mounted) Navigator.of(context).pop();
+
+    if (success && mounted) {
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => OtpVerificationScreen(
+            authController: widget.authController,
+            phone: _phone.text.trim(),
+            name: _name.text,
+            email: _email.text,
+            password: _password.text,
+            role: _role,
+          ),
+        ),
+      );
+    }
   }
 }
 
@@ -192,7 +216,9 @@ class _RoleCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Material(
-      color: selected ? colorScheme.primaryContainer : colorScheme.surfaceContainerLow,
+      color: selected
+          ? colorScheme.primaryContainer
+          : colorScheme.surfaceContainerLow,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),

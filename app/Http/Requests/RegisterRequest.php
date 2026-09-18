@@ -18,7 +18,14 @@ class RegisterRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'phone' => ['nullable', 'string', 'max:30', 'unique:users,phone'],
+            // Required now — SMS OTP verification needs a real number to
+            // text the code to. PH mobile format: 09XXXXXXXXX (11 digits).
+            'phone' => [
+                'required',
+                'string',
+                'regex:/^09\d{9}$/',
+                'unique:users,phone',
+            ],
             'password' => ['required', 'confirmed', Password::min(8)],
             'role' => ['nullable', Rule::in(['customer', 'restaurant_owner'])],
             'device_name' => ['nullable', 'string', 'max:100'],

@@ -4,6 +4,7 @@ import '../../addresses/domain/address.dart';
 import '../../addresses/state/address_controller.dart';
 import '../../cart/state/cart_controller.dart';
 import '../state/checkout_controller.dart';
+import 'dragonpay_payment_screen.dart';
 import 'order_confirmation_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -25,6 +26,7 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final _notes = TextEditingController();
   int? _selectedAddressId;
+  String _paymentMethod = 'cash_on_delivery';
 
   @override
   void initState() {
@@ -134,11 +136,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Card(
-                child: ListTile(
-                  leading: Icon(Icons.payments_outlined),
-                  title: Text('Cash on delivery'),
-                  trailing: Icon(Icons.check_circle, color: Colors.green),
+              RadioGroup<String>(
+                groupValue: _paymentMethod,
+                onChanged: (value) {
+                  if (value != null) setState(() => _paymentMethod = value);
+                },
+                child: Column(
+                  children: [
+                    Card(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      color: _paymentMethod == 'cash_on_delivery'
+                          ? Theme.of(context).colorScheme.primaryContainer
+                          : null,
+                      child: const RadioListTile<String>(
+                        value: 'cash_on_delivery',
+                        secondary: Icon(Icons.payments_outlined),
+                        title: Text('Cash on delivery'),
+                      ),
+                    ),
+                    Card(
+                      color: _paymentMethod == 'gcash'
+                          ? Theme.of(context).colorScheme.primaryContainer
+                          : null,
+                      child: const RadioListTile<String>(
+                        value: 'gcash',
+                        secondary: Icon(Icons.account_balance_wallet_outlined),
+                        title: Text('GCash'),
+                        subtitle: Text('via Dragonpay'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 20),
@@ -173,7 +200,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         dimension: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Place order'),
+                    : Text(
+                        _paymentMethod == 'gcash'
+                            ? 'Pay with GCash'
+                            : 'Place order',
+                      ),
               ),
             ],
           );
@@ -208,15 +239,37 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     final addressId = _selectedAddressId;
     if (addressId == null) return;
 
-    final order = await widget.checkoutController.placeOrder(
+    var order = await widget.checkoutController.placeOrder(
       cart: widget.cartController,
       addressId: addressId,
+      paymentMethod: _paymentMethod,
       notes: _notes.text,
     );
 
-    if (order != null && mounted) {
+    if (order == null || !mounted) return;
+
+    if (_paymentMethod == 'gcash') {
+      final paymentUrl = await widget.checkoutController.initiateGcashPayment(
+        order.id,
+      );
+
+      if (paymentUrl != null && mounted) {
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => DragonpayPaymentScreen(paymentUrl: paymentUrl),
+          ),
+        );
+
+        // The WebView screen closed (customer finished or backed out of
+        // GCash) — re-fetch the order so we show its real payment_status,
+        // which was updated server-to-server by Dragonpay's postback.
+        order = await widget.checkoutController.refreshOrder(order.id) ?? order;
+      }
+    }
+
+    if (mounted) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => OrderConfirmationScreen(order: order)),
+        MaterialPageRoute(builder: (_) => OrderConfirmationScreen(order: order!)),
         (route) => route.isFirst,
       );
     }

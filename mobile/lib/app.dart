@@ -17,6 +17,7 @@ import 'features/owner/state/owner_menu_controller.dart';
 import 'features/owner/state/owner_restaurant_controller.dart';
 import 'features/orders/data/order_service.dart';
 import 'features/orders/data/owner_order_service.dart';
+import 'features/orders/data/payment_service.dart';
 import 'features/orders/state/checkout_controller.dart';
 import 'features/orders/state/owner_order_controller.dart';
 import 'features/restaurants/data/restaurant_service.dart';
@@ -67,7 +68,10 @@ class _FoodOrderingEstAppState extends State<FoodOrderingEstApp> {
 
     cartController = CartController();
 
-    checkoutController = CheckoutController(OrderService(apiClient));
+    checkoutController = CheckoutController(
+      OrderService(apiClient),
+      PaymentService(apiClient),
+    );
 
     ownerOrderController = OwnerOrderController(OwnerOrderService(apiClient));
   }

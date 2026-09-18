@@ -31,6 +31,7 @@ class Order extends Model
 
         'payment_method',
         'payment_status',
+        'dragonpay_refno',
 
         'notes',
         'placed_at',

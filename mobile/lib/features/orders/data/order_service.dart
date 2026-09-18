@@ -10,6 +10,7 @@ class OrderService {
   Future<Order> placeOrder({
     required CartController cart,
     required int addressId,
+    required String paymentMethod,
     String? notes,
   }) async {
     final response = await _api.post(
@@ -18,7 +19,7 @@ class OrderService {
       body: {
         'restaurant_id': cart.restaurantId,
         'address_id': addressId,
-        'payment_method': 'cash_on_delivery',
+        'payment_method': paymentMethod,
         'notes': notes?.trim().isEmpty == true ? null : notes?.trim(),
         'items': [
           for (final cartItem in cart.items)
@@ -29,6 +30,13 @@ class OrderService {
         ],
       },
     );
+
+    final data = Map<String, dynamic>.from(response['data'] as Map);
+    return Order.fromJson(data);
+  }
+
+  Future<Order> getOrder(int orderId) async {
+    final response = await _api.get('/orders/$orderId', authenticated: true);
 
     final data = Map<String, dynamic>.from(response['data'] as Map);
     return Order.fromJson(data);

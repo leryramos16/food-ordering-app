@@ -10,6 +10,34 @@ class OrderConfirmationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isGcash = order.paymentMethod == 'gcash';
+
+    final (icon, iconColor, title, subtitle) = switch (order.paymentStatus) {
+      'paid' => (
+        Icons.check_circle_outline,
+        Colors.green,
+        'Payment received!',
+        'Your GCash payment went through.',
+      ),
+      'failed' => (
+        Icons.error_outline,
+        colorScheme.error,
+        'Payment didn\'t go through',
+        'You can try paying again from your order, or contact the restaurant.',
+      ),
+      _ when isGcash => (
+        Icons.hourglass_top_outlined,
+        Colors.orange,
+        'Payment pending',
+        'We\'re still waiting for GCash to confirm. This can take a moment.',
+      ),
+      _ => (
+        Icons.check_circle_outline,
+        colorScheme.primary,
+        'Order placed!',
+        'Pay with cash when your order arrives.',
+      ),
+    };
 
     return Scaffold(
       body: SafeArea(
@@ -21,21 +49,26 @@ class OrderConfirmationScreen extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 40,
-                  backgroundColor: colorScheme.primaryContainer,
-                  child: Icon(
-                    Icons.check_circle_outline,
-                    size: 44,
-                    color: colorScheme.onPrimaryContainer,
-                  ),
+                  backgroundColor: iconColor.withValues(alpha: 0.15),
+                  child: Icon(icon, size: 44, color: iconColor),
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Order placed!',
+                  title,
+                  textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 10),
                 Text(
                   order.orderNumber,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(

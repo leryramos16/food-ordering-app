@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\OwnerCategoryController;
 use App\Http\Controllers\Api\OwnerMenuItemController;
 use App\Http\Controllers\Api\OwnerOrderController;
 use App\Http\Controllers\Api\OwnerRestaurantController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\RestaurantController;
 use App\Http\Controllers\Api\OrderController;
 use Illuminate\Support\Facades\Route;
@@ -35,8 +36,17 @@ Route::get('/restaurants/{restaurant}/menu', [
     'menu',
 ]);
 
+// Dragonpay calls these directly — not authenticated app requests, since
+// Dragonpay's servers (not a logged-in user) are the caller. Living under
+// /api keeps them in the stateless "api" middleware group, with no CSRF
+// check to trip up a server-to-server webhook.
+Route::any('/payments/dragonpay/postback', [PaymentController::class, 'postback']);
+Route::get('/payments/dragonpay/return', [PaymentController::class, 'returnUrl']);
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/orders', [OrderController::class, 'store']);
+    Route::get('/orders/{order}', [OrderController::class, 'show']);
+    Route::post('/orders/{order}/payment', [PaymentController::class, 'initiate']);
 
     Route::get('/addresses', [AddressController::class, 'index']);
     Route::post('/addresses', [AddressController::class, 'store']);

@@ -40,6 +40,7 @@ class StoreOrderRequest extends FormRequest
                 'required',
                 Rule::in([
                     'cash_on_delivery',
+                    'gcash',
                 ]),
             ],
 

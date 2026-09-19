@@ -681,15 +681,75 @@ class _AddButton extends StatelessWidget {
   }
 
   Future<void> _handleTap(BuildContext context) async {
-    if (cartController.belongsToDifferentRestaurant(restaurant.id)) {
+    final restaurantConflict = cartController.belongsToDifferentRestaurant(
+      restaurant.id,
+    );
+    final preorderConflict = cartController.hasPreorderConflict(
+      item.isPreorder,
+    );
+
+    if (restaurantConflict || preorderConflict) {
+      final TextSpan message;
+
+      if (restaurantConflict) {
+        message = TextSpan(
+          style: DefaultTextStyle.of(context).style,
+          children: [
+            const TextSpan(text: 'Your cart has items from '),
+            TextSpan(
+              text: cartController.restaurantName,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const TextSpan(text: '. Adding from '),
+            TextSpan(
+              text: restaurant.name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const TextSpan(text: ' will clear it.'),
+          ],
+        );
+      } else if (cartController.requiresPreorderDate) {
+        message = TextSpan(
+          style: DefaultTextStyle.of(context).style,
+          children: [
+            const TextSpan(
+              text:
+                  'Your cart has a pre-order item that needs advance notice. "',
+            ),
+            TextSpan(
+              text: item.name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const TextSpan(
+              text:
+                  '" is a regular item and can\'t be ordered at the same time — '
+                  'starting a new cart will clear it.',
+            ),
+          ],
+        );
+      } else {
+        message = TextSpan(
+          style: DefaultTextStyle.of(context).style,
+          children: [
+            const TextSpan(text: 'Your cart has regular order-now items. "'),
+            TextSpan(
+              text: item.name,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const TextSpan(
+              text:
+                  '" needs advance notice and can\'t be ordered at the same time — '
+                  'starting a new cart will clear it.',
+            ),
+          ],
+        );
+      }
+
       final confirmed = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Start a new cart?'),
-          content: Text(
-            'Your cart has items from ${cartController.restaurantName}. '
-            'Adding from ${restaurant.name} will clear it.',
-          ),
+          content: Text.rich(message),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),

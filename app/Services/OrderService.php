@@ -70,6 +70,11 @@ class OrderService
             // 0 means nothing here needs advance notice.
             $requiredLeadDays = 0;
 
+            // Whether any item in this order is NOT a pre-order item —
+            // used below to reject mixing a pre-order with a regular,
+            // order-now item in the same order.
+            $hasRegularItem = false;
+
             foreach ($requestedItems as $requestedItem) {
                 
                 $menuItemId = (int) $requestedItem['menu_item_id'];
@@ -112,6 +117,8 @@ class OrderService
 
                 if ($menuItem->is_preorder) {
                     $requiredLeadDays = max($requiredLeadDays, $menuItem->preorder_lead_days ?? 1);
+                } else {
+                    $hasRegularItem = true;
                 }
 
                 $orderLines[] = [
@@ -122,6 +129,16 @@ class OrderService
                     'line_total'   => $this->centsToMoney($lineTotalCents),
                 ];
             }
+
+                // A pre-order needs its own delivery slot — it can't share
+                // an order with something meant to arrive right away.
+                if ($requiredLeadDays > 0 && $hasRegularItem) {
+                    throw ValidationException::withMessages([
+                        'items' => [
+                            'A pre-order item can\'t be ordered together with a regular item — place them as separate orders.',
+                        ],
+                    ]);
+                }
 
                 // Check restaurant minimum order
                 $minimumOrderCents =  $this->moneyToCents($restaurant->minimum_order);

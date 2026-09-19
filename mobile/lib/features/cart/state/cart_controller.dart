@@ -44,6 +44,14 @@ class CartController extends ChangeNotifier {
     return restaurantId != null && restaurantId != otherRestaurantId;
   }
 
+  /// A pre-order item needs its own scheduled delivery slot, so it can't
+  /// share a cart with a regular "order now" item. This tells the UI
+  /// whether adding an item with the given pre-order-ness would conflict
+  /// with what's already in the cart.
+  bool hasPreorderConflict(bool otherItemIsPreorder) {
+    return _items.isNotEmpty && requiresPreorderDate != otherItemIsPreorder;
+  }
+
   void addItem(
     MenuItem menuItem, {
     required int restaurantId,

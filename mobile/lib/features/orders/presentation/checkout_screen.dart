@@ -312,9 +312,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 TextField(
                   controller: _notes,
                   maxLines: 2,
-                  decoration: const InputDecoration(
-                    hintText: 'e.g. No onions, leave at the gate (optional)',
-                  ),
+                  decoration: const InputDecoration(hintText: '(Optional)'),
                 ),
                 const SizedBox(height: 20),
                 Text(

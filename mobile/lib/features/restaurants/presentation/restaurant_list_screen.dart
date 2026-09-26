@@ -39,6 +39,43 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
     widget.controller.loadRestaurants();
   }
 
+  void _openRestaurant(Restaurant restaurant) {
+    if (!restaurant.isOpen) {
+      showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          icon: const Icon(Icons.storefront_outlined),
+          title: const Text('Restaurant Closed'),
+          content: Text(
+            '${restaurant.name} is currently closed and is not accepting orders.',
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+
+      return;
+    }
+
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RestaurantDetailScreen(
+          restaurantId: restaurant.id,
+          restaurantName: restaurant.name,
+          service: widget.service,
+          cartController: widget.cartController,
+          addressController: widget.addressController,
+          checkoutController: widget.checkoutController,
+          currentUser: widget.currentUser,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
@@ -86,19 +123,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
 
               return _RestaurantCard(
                 restaurant: restaurant,
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => RestaurantDetailScreen(
-                      restaurantId: restaurant.id,
-                      restaurantName: restaurant.name,
-                      service: widget.service,
-                      cartController: widget.cartController,
-                      addressController: widget.addressController,
-                      checkoutController: widget.checkoutController,
-                      currentUser: widget.currentUser,
-                    ),
-                  ),
-                ),
+                onTap: () => _openRestaurant(restaurant),
               );
             },
           ),
